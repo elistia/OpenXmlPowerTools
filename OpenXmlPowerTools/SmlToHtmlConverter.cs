@@ -5,7 +5,6 @@ using DocumentFormat.OpenXml.Packaging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,8 +58,6 @@ namespace OpenXmlPowerTools
 
     public static class SmlToHtmlConverter
     {
-        // ***********************************************************************************************************************************
-        #region PublicApis
         public static XElement ConvertTableToHtml(SmlDocument smlDoc, SmlToHtmlConverterSettings settings, string tableName)
         {
             using (var ms = new MemoryStream())
@@ -69,7 +66,7 @@ namespace OpenXmlPowerTools
                 using (var sDoc = SpreadsheetDocument.Open(ms, false))
                 {
                     var rangeXml = SmlDataRetriever.RetrieveTable(sDoc, tableName);
-                    var xhtml = SmlToHtmlConverter.ConvertToHtmlInternal(sDoc, settings, rangeXml);
+                    var xhtml = ConvertToHtmlInternal(sDoc, settings, rangeXml);
                     return xhtml;
                 }
             }
@@ -78,11 +75,9 @@ namespace OpenXmlPowerTools
         public static XElement ConvertTableToHtml(SpreadsheetDocument sDoc, SmlToHtmlConverterSettings settings, string tableName)
         {
             var rangeXml = SmlDataRetriever.RetrieveTable(sDoc, tableName);
-            var xhtml = SmlToHtmlConverter.ConvertToHtmlInternal(sDoc, settings, rangeXml);
+            var xhtml = ConvertToHtmlInternal(sDoc, settings, rangeXml);
             return xhtml;
         }
-        #endregion
-        // ***********************************************************************************************************************************
 
         private static XElement ConvertToHtmlInternal(SpreadsheetDocument sDoc, SmlToHtmlConverterSettings htmlConverterSettings, XElement rangeXml)
         {
@@ -231,33 +226,6 @@ namespace OpenXmlPowerTools
             }
         }
 
-        private static object ConvertToHtmlTransform(WordprocessingDocument wordDoc,
-            WmlToHtmlConverterSettings settings, XNode node)
-        {
-            // Ignore element.
-            return null;
-        }
-
-        private static readonly HashSet<string> UnknownFonts = new HashSet<string>();
-        private static HashSet<string> _knownFamilies;
-
-        private static HashSet<string> KnownFamilies
-        {
-            get
-            {
-                if (_knownFamilies == null)
-                {
-                    _knownFamilies = new HashSet<string>();
-                    var families = FontFamily.Families;
-                    foreach (var fam in families)
-                    {
-                        _knownFamilies.Add(fam.Name);
-                    }
-                }
-                return _knownFamilies;
-            }
-        }
-
         private static readonly Dictionary<string, string> FontFallback = new Dictionary<string, string>()
         {
             { "Arial", @"'{0}', 'sans-serif'" },
@@ -292,43 +260,5 @@ namespace OpenXmlPowerTools
             { "Courier New", @"'{0}'" },
             { "Lucida Console", @"'{0}'" },
         };
-
-        private static void CreateFontCssProperty(string font, Dictionary<string, string> style)
-        {
-            if (FontFallback.ContainsKey(font))
-            {
-                style.AddIfMissing("font-family", string.Format(FontFallback[font], font));
-                return;
-            }
-            style.AddIfMissing("font-family", font);
-        }
-
-        private static bool GetBoolProp(XElement runProps, XName xName)
-        {
-            var p = runProps.Element(xName);
-            if (p == null)
-            {
-                return false;
-            }
-
-            var v = p.Attribute(W.val);
-            if (v == null)
-            {
-                return true;
-            }
-
-            var s = v.Value.ToLower();
-            if (s == "0" || s == "false")
-            {
-                return false;
-            }
-
-            if (s == "1" || s == "true")
-            {
-                return true;
-            }
-
-            return false;
-        }
     }
 }

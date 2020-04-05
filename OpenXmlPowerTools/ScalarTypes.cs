@@ -9,18 +9,9 @@ namespace OpenXmlPowerTools
 {
     internal static class DefaultScalarTypes
     {
-        private static readonly Hashtable defaultScalarTypesHash;
-        internal static bool IsTypeInList(Collection<string> typeNames)
+        private static readonly Hashtable defaultScalarTypesHash = new Hashtable(StringComparer.OrdinalIgnoreCase)
         {
-            var text = PSObjectIsOfExactType(typeNames);
-            return !string.IsNullOrEmpty(text) && (PSObjectIsEnum(typeNames) || DefaultScalarTypes.defaultScalarTypesHash.ContainsKey(text));
-        }
-
-        static DefaultScalarTypes()
-        {
-            DefaultScalarTypes.defaultScalarTypesHash = new Hashtable(StringComparer.OrdinalIgnoreCase)
-            {
-                { "System.String", null },
+            { "System.String", null },
                 { "System.SByte", null },
                 { "System.Byte", null },
                 { "System.Int16", null },
@@ -36,7 +27,12 @@ namespace OpenXmlPowerTools
                 { "System.Decimal", null },
                 { "System.IntPtr", null },
                 { "System.Security.SecureString", null }
-            };
+        };
+
+        internal static bool IsTypeInList(Collection<string> typeNames)
+        {
+            var text = PSObjectIsOfExactType(typeNames);
+            return !string.IsNullOrEmpty(text) && (PSObjectIsEnum(typeNames) || defaultScalarTypesHash.ContainsKey(text));
         }
 
         internal static string PSObjectIsOfExactType(Collection<string> typeNames)

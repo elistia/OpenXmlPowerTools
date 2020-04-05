@@ -1,35 +1,36 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-/*Author:Martin.Holzherr;Date:20080922;Context:"PEG Support for C#";Licence:CPOL
- * <<History>> 
- *  20080922;V1.0 created
- *  20080929;UTF16BE;Added UTF16BE read support to <<FileLoader.LoadFile(out string src)>>
- * <</History>>
-*/
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 namespace Peg.Base
 {
     #region Input File Support
+
     public enum EncodingClass { unicode, utf8, binary, ascii };
+
     public enum UnicodeDetection { notApplicable, BOM, FirstCharIsAscii };
+
     public class FileLoader
     {
         public enum FileEncoding { none, ascii, binary, utf8, unicode, utf16be, utf16le, utf32le, utf32be, uniCodeBOM };
+
         public FileLoader(EncodingClass encodingClass, UnicodeDetection detection, string path)
         {
             encoding_ = GetEncoding(encodingClass, detection, path);
             path_ = path;
         }
+
         public bool IsBinaryFile()
         {
             return encoding_ == FileEncoding.binary;
         }
+
         public bool LoadFile(out byte[] src)
         {
             src = null;
@@ -44,6 +45,7 @@ namespace Peg.Base
                 return true;
             }
         }
+
         public bool LoadFile(out string src)
         {
             src = null;
@@ -87,7 +89,6 @@ namespace Peg.Base
                     }
                 }
             }
-
         }
 
         private Encoding FileEncodingToTextEncoding()
@@ -106,7 +107,6 @@ namespace Peg.Base
                 default:
                     Debug.Assert(false);
                     return null;
-
             }
         }
 
@@ -183,8 +183,11 @@ namespace Peg.Base
         private readonly string path_;
         public readonly FileEncoding encoding_;
     }
+
     #endregion Input File Support
+
     #region Error handling
+
     public class PegException : System.Exception
     {
         public PegException()
@@ -192,6 +195,7 @@ namespace Peg.Base
         {
         }
     }
+
     public struct PegError
     {
         internal SortedList<int, int> lineStarts;
@@ -209,6 +213,7 @@ namespace Peg.Base
             }
             --colNo;
         }
+
         public void GetLineAndCol(string s, int pos, out int lineNo, out int colNo)
         {
             for (var i = lineStarts.Count(); i > 0; --i)
@@ -231,54 +236,73 @@ namespace Peg.Base
             AddLineStarts(s, 0, pos, ref lineNo, out colNo);
         }
     }
+
     #endregion Error handling
+
     #region Syntax/Parse-Tree related classes
+
     public enum ESpecialNodes { eFatal = -10001, eAnonymNTNode = -1000, eAnonymASTNode = -1001, eAnonymousNode = -100 }
+
     public enum ECreatorPhase { eCreate, eCreationComplete, eCreateAndComplete }
+
     public struct PegBegEnd//indices into the source string
     {
         public int Length => posEnd_ - posBeg_;
+
         public string GetAsString(string src)
         {
             Debug.Assert(src.Length >= posEnd_);
             return src.Substring(posBeg_, Length);
         }
+
         public int posBeg_;
         public int posEnd_;
     }
+
     public class PegNode : ICloneable
     {
         #region Constructors
+
         public PegNode(PegNode parent, int id, PegBegEnd match, PegNode child, PegNode next)
         {
             parent_ = parent; id_ = id; child_ = child; next_ = next;
             match_ = match;
         }
+
         public PegNode(PegNode parent, int id, PegBegEnd match, PegNode child)
             : this(parent, id, match, child, null)
         {
         }
+
         public PegNode(PegNode parent, int id, PegBegEnd match)
             : this(parent, id, match, null, null)
         { }
+
         public PegNode(PegNode parent, int id)
             : this(parent, id, new PegBegEnd(), null, null)
         {
         }
+
         #endregion Constructors
+
         #region Public Members
+
         public virtual string GetAsString(string s)
         {
             return match_.GetAsString(s);
         }
+
         public virtual PegNode Clone()
         {
             var clone = new PegNode(parent_, id_, match_);
             CloneSubTrees(clone);
             return clone;
         }
+
         #endregion Public Members
+
         #region Protected Members
+
         protected void CloneSubTrees(PegNode clone)
         {
             PegNode child = null, next = null;
@@ -295,11 +319,15 @@ namespace Peg.Base
             clone.child_ = child;
             clone.next_ = next;
         }
+
         #endregion Protected Members
+
         #region Data Members
+
         public int id_;
         public PegNode parent_, child_, next_;
         public PegBegEnd match_;
+
         #endregion Data Members
 
         #region ICloneable Members
@@ -309,32 +337,50 @@ namespace Peg.Base
             return Clone();
         }
 
-        #endregion
+        #endregion ICloneable Members
     }
+
     internal struct PegTree
     {
         internal enum AddPolicy { eAddAsChild, eAddAsSibling };
+
         internal PegNode root_;
         internal PegNode cur_;
         internal AddPolicy addPolicy;
     }
+
     public abstract class PrintNode
     {
         public abstract int LenMaxLine();
+
         public abstract bool IsLeaf(PegNode p);
-        public virtual bool IsSkip(PegNode p) { return false; }
+
+        public virtual bool IsSkip(PegNode p)
+        {
+            return false;
+        }
+
         public abstract void PrintNodeBeg(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel);
+
         public abstract void PrintNodeEnd(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel);
+
         public abstract int LenNodeBeg(PegNode p);
+
         public abstract int LenNodeEnd(PegNode p);
+
         public abstract void PrintLeaf(PegNode p, ref int nOffsetLineBeg, bool bAlignVertical);
+
         public abstract int LenLeaf(PegNode p);
+
         public abstract int LenDistNext(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel);
+
         public abstract void PrintDistNext(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel);
     }
+
     public class TreePrint : PrintNode
     {
         #region Data Members
+
         public delegate string GetNodeName(PegNode node);
 
         private readonly string src_;
@@ -342,8 +388,11 @@ namespace Peg.Base
         private readonly int nMaxLineLen_;
         private readonly bool bVerbose_;
         private readonly GetNodeName GetNodeName_;
+
         #endregion Data Members
+
         #region Methods
+
         public TreePrint(TextWriter treeOut, string src, int nMaxLineLen, GetNodeName GetNodeName, bool bVerbose)
         {
             treeOut_ = treeOut;
@@ -425,7 +474,12 @@ namespace Peg.Base
             nLen += LenNodeEnd(p);
             return nLen;
         }
-        public override int LenMaxLine() { return nMaxLineLen_; }
+
+        public override int LenMaxLine()
+        {
+            return nMaxLineLen_;
+        }
+
         public override void
             PrintNodeBeg(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel)
         {
@@ -441,6 +495,7 @@ namespace Peg.Base
                 ++nOffsetLineBeg;
             }
         }
+
         public override void
             PrintNodeEnd(PegNode p, bool bAlignVertical, ref int nOffsetLineBeg, int nLevel)
         {
@@ -455,8 +510,17 @@ namespace Peg.Base
                 ++nOffsetLineBeg;
             }
         }
-        public override int LenNodeBeg(PegNode p) { return LenIdAsName(p) + 1; }
-        public override int LenNodeEnd(PegNode p) { return 1; }
+
+        public override int LenNodeBeg(PegNode p)
+        {
+            return LenIdAsName(p) + 1;
+        }
+
+        public override int LenNodeEnd(PegNode p)
+        {
+            return 1;
+        }
+
         public override void PrintLeaf(PegNode p, ref int nOffsetLineBeg, bool bAlignVertical)
         {
             if (bVerbose_)
@@ -476,6 +540,7 @@ namespace Peg.Base
                 treeOut_.Write('>');
             }
         }
+
         public override int LenLeaf(PegNode p)
         {
             var nLen = p.match_.posEnd_ - p.match_.posBeg_ + 2;
@@ -486,6 +551,7 @@ namespace Peg.Base
 
             return nLen;
         }
+
         public override bool IsLeaf(PegNode p)
         {
             return p.child_ == null;
@@ -523,17 +589,26 @@ namespace Peg.Base
             var name = GetNodeName_(p);
             treeOut_.Write(name);
         }
+
         #endregion Methods
     }
+
     #endregion Syntax/Parse-Tree related classes
+
     #region Parsers
+
     public abstract class PegBaseParser
     {
         #region Data Types
+
         public delegate bool Matcher();
+
         public delegate PegNode Creator(ECreatorPhase ePhase, PegNode parentOrCreated, int id);
+
         #endregion Data Types
+
         #region Data members
+
         protected int srcLen_;
         protected int pos_;
         protected bool bMute_;
@@ -541,7 +616,9 @@ namespace Peg.Base
         protected Creator nodeCreator_;
         protected int maxpos_;
         private PegTree tree;
+
         #endregion Data members
+
         public virtual string GetRuleNameFromId(int id)
         {//normally overridden
             switch (id)
@@ -553,15 +630,18 @@ namespace Peg.Base
                 default: return id.ToString();
             }
         }
+
         public virtual void GetProperties(out EncodingClass encoding, out UnicodeDetection detection)
         {
             encoding = EncodingClass.ascii;
             detection = UnicodeDetection.notApplicable;
         }
+
         public int GetMaximumPosition()
         {
             return maxpos_;
         }
+
         protected PegNode DefaultNodeCreator(ECreatorPhase phase, PegNode parentOrCreated, int id)
         {
             if (phase == ECreatorPhase.eCreate || phase == ECreatorPhase.eCreateAndComplete)
@@ -578,15 +658,20 @@ namespace Peg.Base
                 return null;
             }
         }
+
         #region Constructors
+
         public PegBaseParser(TextWriter errOut)
         {
             srcLen_ = pos_ = 0;
             errOut_ = errOut;
             nodeCreator_ = DefaultNodeCreator;
         }
+
         #endregion Constructors
+
         #region Reinitialization, TextWriter access,Tree Access
+
         public void Construct(TextWriter Fout)
         {
             srcLen_ = pos_ = 0;
@@ -594,15 +679,27 @@ namespace Peg.Base
             SetErrorDestination(Fout);
             ResetTree();
         }
-        public void Rewind() { pos_ = 0; }
+
+        public void Rewind()
+        {
+            pos_ = 0;
+        }
+
         public void SetErrorDestination(TextWriter errOut)
         {
             errOut_ = errOut == null ? new StreamWriter(System.Console.OpenStandardError())
                 : errOut;
         }
+
         #endregion Reinitialization, TextWriter access,Tree Access
+
         #region Tree root access, Tree Node generation/display
-        public PegNode GetRoot() { return tree.root_; }
+
+        public PegNode GetRoot()
+        {
+            return tree.root_;
+        }
+
         public void ResetTree()
         {
             tree.root_ = null;
@@ -654,18 +751,22 @@ namespace Peg.Base
             tree.cur_ = prevCur;
             tree.addPolicy = prevPolicy;
         }
+
         public bool TreeChars(Matcher toMatch)
         {
             return TreeCharsWithId((int)ESpecialNodes.eAnonymousNode, toMatch);
         }
+
         public bool TreeChars(Creator nodeCreator, Matcher toMatch)
         {
             return TreeCharsWithId(nodeCreator, (int)ESpecialNodes.eAnonymousNode, toMatch);
         }
+
         public bool TreeCharsWithId(int nId, Matcher toMatch)
         {
             return TreeCharsWithId(nodeCreator_, nId, toMatch);
         }
+
         public bool TreeCharsWithId(Creator nodeCreator, int nId, Matcher toMatch)
         {
             var pos = pos_;
@@ -681,10 +782,12 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool TreeNT(int nRuleId, Matcher toMatch)
         {
             return TreeNT(nodeCreator_, nRuleId, toMatch);
         }
+
         public bool TreeNT(Creator nodeCreator, int nRuleId, Matcher toMatch)
         {
             if (bMute_)
@@ -712,10 +815,12 @@ namespace Peg.Base
             }
             return bMatches;
         }
+
         public bool TreeAST(int nRuleId, Matcher toMatch)
         {
             return TreeAST(nodeCreator_, nRuleId, toMatch);
         }
+
         public bool TreeAST(Creator nodeCreator, int nRuleId, Matcher toMatch)
         {
             if (bMute_)
@@ -751,33 +856,42 @@ namespace Peg.Base
             }
             return bMatches;
         }
+
         public bool TreeNT(Matcher toMatch)
         {
             return TreeNT((int)ESpecialNodes.eAnonymNTNode, toMatch);
         }
+
         public bool TreeNT(Creator nodeCreator, Matcher toMatch)
         {
             return TreeNT(nodeCreator, (int)ESpecialNodes.eAnonymNTNode, toMatch);
         }
+
         public bool TreeAST(Matcher toMatch)
         {
             return TreeAST((int)ESpecialNodes.eAnonymASTNode, toMatch);
         }
+
         public bool TreeAST(Creator nodeCreator, Matcher toMatch)
         {
             return TreeAST(nodeCreator, (int)ESpecialNodes.eAnonymASTNode, toMatch);
         }
+
         public virtual string TreeNodeToString(PegNode node)
         {
             return GetRuleNameFromId(node.id_);
         }
+
         public void SetNodeCreator(Creator nodeCreator)
         {
             Debug.Assert(nodeCreator != null);
             nodeCreator_ = nodeCreator;
         }
-        #endregion Tree Node generation
+
+        #endregion Tree root access, Tree Node generation/display
+
         #region PEG  e1 e2 .. ; &e1 ; !e1 ;  e? ; e* ; e+ ; e{a,b} ; .
+
         public bool And(Matcher pegSequence)
         {
             var prevCur = tree.cur_;
@@ -791,6 +905,7 @@ namespace Peg.Base
             }
             return bMatches;
         }
+
         public bool Peek(Matcher toMatch)
         {
             var pos0 = pos_;
@@ -801,6 +916,7 @@ namespace Peg.Base
             pos_ = pos0;
             return bMatches;
         }
+
         public bool Not(Matcher toMatch)
         {
             var pos0 = pos_;
@@ -811,6 +927,7 @@ namespace Peg.Base
             pos_ = pos0;
             return !bMatches;
         }
+
         public bool PlusRepeat(Matcher toRepeat)
         {
             int i;
@@ -825,6 +942,7 @@ namespace Peg.Base
             }
             return i > 0;
         }
+
         public bool OptRepeat(Matcher toRepeat)
         {
             for (; ; )
@@ -837,6 +955,7 @@ namespace Peg.Base
                 }
             }
         }
+
         public bool Option(Matcher toMatch)
         {
             var pos0 = pos_;
@@ -847,6 +966,7 @@ namespace Peg.Base
 
             return true;
         }
+
         public bool ForRepeat(int count, Matcher toRepeat)
         {
             var prevCur = tree.cur_;
@@ -864,6 +984,7 @@ namespace Peg.Base
             }
             return true;
         }
+
         public bool ForRepeat(int lower, int upper, Matcher toRepeat)
         {
             var prevCur = tree.cur_;
@@ -885,6 +1006,7 @@ namespace Peg.Base
             }
             return true;
         }
+
         public bool Any()
         {
             if (pos_ < srcLen_)
@@ -894,40 +1016,53 @@ namespace Peg.Base
             }
             return false;
         }
+
         #endregion PEG  e1 e2 .. ; &e1 ; !e1 ;  e? ; e* ; e+ ; e{a,b} ; .
     }
+
     public class PegByteParser : PegBaseParser
     {
         #region Data members
+
         protected byte[] src_;
         private PegError errors;
+
         #endregion Data members
 
         #region PEG optimizations
+
         public sealed class BytesetData
         {
             public struct Range
             {
-                public Range(byte low, byte high) { this.low = low; this.high = high; }
+                public Range(byte low, byte high)
+                {
+                    this.low = low; this.high = high;
+                }
+
                 public byte low;
                 public byte high;
             }
 
             private readonly System.Collections.BitArray charSet_;
             private readonly bool bNegated_;
+
             public BytesetData(System.Collections.BitArray b)
                 : this(b, false)
             {
             }
+
             public BytesetData(System.Collections.BitArray b, bool bNegated)
             {
                 charSet_ = new System.Collections.BitArray(b);
                 bNegated_ = bNegated;
             }
+
             public BytesetData(Range[] r, byte[] c)
                 : this(r, c, false)
             {
             }
+
             public BytesetData(Range[] r, byte[] c, bool bNegated)
             {
                 var max = 0;
@@ -974,6 +1109,7 @@ namespace Peg.Base
 
                 bNegated_ = bNegated;
             }
+
             public bool Matches(byte c)
             {
                 var bMatches = c < charSet_.Length && charSet_[c];
@@ -987,6 +1123,7 @@ namespace Peg.Base
                 }
             }
         }
+
         /*     public class BytesetData
              {
                  public struct Range
@@ -1026,7 +1163,6 @@ namespace Peg.Base
                      foreach (int val in c) charSet_[val] = true;
                  }
 
-
                  public bool Matches(byte c)
                  {
                      bool bMatches = c < charSet_.Length && charSet_[(int)c];
@@ -1034,27 +1170,36 @@ namespace Peg.Base
                      else return bMatches;
                  }
              }*/
+
         #endregion PEG optimizations
+
         #region Constructors
+
         public PegByteParser()
             : this(null)
         {
         }
+
         public PegByteParser(byte[] src) : base(null)
         {
             SetSource(src);
         }
+
         public PegByteParser(byte[] src, TextWriter errOut) : base(errOut)
         {
             SetSource(src);
         }
+
         #endregion Constructors
+
         #region Reinitialization, Source Code access, TextWriter access,Tree Access
+
         public void Construct(byte[] src, TextWriter Fout)
         {
             base.Construct(Fout);
             SetSource(src);
         }
+
         public void SetSource(byte[] src)
         {
             if (src == null)
@@ -1068,10 +1213,16 @@ namespace Peg.Base
                 [0] = 1
             };
         }
-        public byte[] GetSource() { return src_; }
+
+        public byte[] GetSource()
+        {
+            return src_;
+        }
 
         #endregion Reinitialization, Source Code access, TextWriter access,Tree Access
+
         #region Setting host variables
+
         public bool Into(Matcher toMatch, out byte[] into)
         {
             var pos = pos_;
@@ -1091,6 +1242,7 @@ namespace Peg.Base
                 return false;
             }
         }
+
         public bool Into(Matcher toMatch, out PegBegEnd begEnd)
         {
             begEnd.posBeg_ = pos_;
@@ -1098,6 +1250,7 @@ namespace Peg.Base
             begEnd.posEnd_ = pos_;
             return bMatches;
         }
+
         public bool Into(Matcher toMatch, out int into)
         {
             into = 0;
@@ -1114,6 +1267,7 @@ namespace Peg.Base
             }
             return true;
         }
+
         public bool Into(Matcher toMatch, out double into)
         {
             into = 0.0;
@@ -1131,6 +1285,7 @@ namespace Peg.Base
 
             return true;
         }
+
         public bool BitsInto(int lowBitNo, int highBitNo, out int into)
         {
             if (pos_ < srcLen_)
@@ -1142,6 +1297,7 @@ namespace Peg.Base
             into = 0;
             return false;
         }
+
         public bool BitsInto(int lowBitNo, int highBitNo, BytesetData toMatch, out int into)
         {
             if (pos_ < srcLen_)
@@ -1154,26 +1310,33 @@ namespace Peg.Base
             into = 0;
             return false;
         }
+
         #endregion Setting host variables
+
         #region Error handling
+
         private void LogOutMsg(string sErrKind, string sMsg)
         {
             errOut_.WriteLine("<{0}>{1}:{2}", pos_, sErrKind, sMsg);
             errOut_.Flush();
         }
+
         public virtual bool Fatal(string sMsg)
         {
-
             LogOutMsg("FATAL", sMsg);
             throw new PegException();
         }
+
         public bool Warning(string sMsg)
         {
             LogOutMsg("WARNING", sMsg);
             return true;
         }
+
         #endregion Error handling
-        #region PEG Bit level equivalents for PEG e1 ; &e1 ; !e1; e1:into ; 
+
+        #region PEG Bit level equivalents for PEG e1 ; &e1 ; !e1; e1:into ;
+
         public bool Bits(int lowBitNo, int highBitNo, byte toMatch)
         {
             if (pos_ < srcLen_ && ((src_[pos_] >> (lowBitNo - 1)) & ((1 << highBitNo) - 1)) == toMatch)
@@ -1183,6 +1346,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool Bits(int lowBitNo, int highBitNo, BytesetData toMatch)
         {
             if (pos_ < srcLen_)
@@ -1193,22 +1357,27 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool PeekBits(int lowBitNo, int highBitNo, byte toMatch)
         {
             return pos_ < srcLen_ && ((src_[pos_] >> (lowBitNo - 1)) & ((1 << highBitNo) - 1)) == toMatch;
         }
+
         public bool NotBits(int lowBitNo, int highBitNo, byte toMatch)
         {
             return !(pos_ < srcLen_ && ((src_[pos_] >> (lowBitNo - 1)) & ((1 << highBitNo) - 1)) == toMatch);
         }
+
         public bool IntoBits(int lowBitNo, int highBitNo, out int val)
         {
             return BitsInto(lowBitNo, highBitNo, out val);
         }
+
         public bool IntoBits(int lowBitNo, int highBitNo, BytesetData toMatch, out int val)
         {
             return BitsInto(lowBitNo, highBitNo, out val);
         }
+
         public bool Bit(int bitNo, byte toMatch)
         {
             if (pos_ < srcLen_ && ((src_[pos_] >> (bitNo - 1)) & 1) == toMatch)
@@ -1218,22 +1387,28 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool PeekBit(int bitNo, byte toMatch)
         {
             return pos_ < srcLen_ && ((src_[pos_] >> (bitNo - 1)) & 1) == toMatch;
         }
+
         public bool NotBit(int bitNo, byte toMatch)
         {
             return !(pos_ < srcLen_ && ((src_[pos_] >> (bitNo - 1)) & 1) == toMatch);
         }
+
         #endregion PEG Bit level equivalents for PEG e1 ; &e1 ; !e1; e1:into ;
+
         #region PEG '<Literal>' / '<Literal>'/i / [low1-high1,low2-high2..] / [<CharList>]
+
         public bool Char(byte c1)
         {
             if (pos_ < srcLen_ && src_[pos_] == c1)
             { ++pos_; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2)
         {
             if (pos_ + 1 < srcLen_
@@ -1242,6 +1417,7 @@ namespace Peg.Base
             { pos_ += 2; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3)
         {
             if (pos_ + 2 < srcLen_
@@ -1251,6 +1427,7 @@ namespace Peg.Base
             { pos_ += 3; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3, byte c4)
         {
             if (pos_ + 3 < srcLen_
@@ -1261,6 +1438,7 @@ namespace Peg.Base
             { pos_ += 4; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3, byte c4, byte c5)
         {
             if (pos_ + 4 < srcLen_
@@ -1272,6 +1450,7 @@ namespace Peg.Base
             { pos_ += 5; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3, byte c4, byte c5, byte c6)
         {
             if (pos_ + 5 < srcLen_
@@ -1284,6 +1463,7 @@ namespace Peg.Base
             { pos_ += 6; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3, byte c4, byte c5, byte c6, byte c7)
         {
             if (pos_ + 6 < srcLen_
@@ -1297,6 +1477,7 @@ namespace Peg.Base
             { pos_ += 7; return true; }
             return false;
         }
+
         public bool Char(byte c1, byte c2, byte c3, byte c4, byte c5, byte c6, byte c7, byte c8)
         {
             if (pos_ + 7 < srcLen_
@@ -1311,6 +1492,7 @@ namespace Peg.Base
             { pos_ += 8; return true; }
             return false;
         }
+
         public bool Char(byte[] s)
         {
             var sLength = s.Length;
@@ -1329,6 +1511,7 @@ namespace Peg.Base
             pos_ += sLength;
             return true;
         }
+
         public static byte ToUpper(byte c)
         {
             if (c >= 97 && c <= 122)
@@ -1340,12 +1523,14 @@ namespace Peg.Base
                 return c;
             }
         }
+
         public bool IChar(byte c1)
         {
             if (pos_ < srcLen_ && ToUpper(src_[pos_]) == c1)
             { ++pos_; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2)
         {
             if (pos_ + 1 < srcLen_
@@ -1354,6 +1539,7 @@ namespace Peg.Base
             { pos_ += 2; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2, byte c3)
         {
             if (pos_ + 2 < srcLen_
@@ -1363,6 +1549,7 @@ namespace Peg.Base
             { pos_ += 3; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2, byte c3, byte c4)
         {
             if (pos_ + 3 < srcLen_
@@ -1373,6 +1560,7 @@ namespace Peg.Base
             { pos_ += 4; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2, byte c3, byte c4, byte c5)
         {
             if (pos_ + 4 < srcLen_
@@ -1384,6 +1572,7 @@ namespace Peg.Base
             { pos_ += 5; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2, byte c3, byte c4, byte c5, byte c6)
         {
             if (pos_ + 5 < srcLen_
@@ -1396,6 +1585,7 @@ namespace Peg.Base
             { pos_ += 6; return true; }
             return false;
         }
+
         public bool IChar(byte c1, byte c2, byte c3, byte c4, byte c5, byte c6, byte c7)
         {
             if (pos_ + 6 < srcLen_
@@ -1409,6 +1599,7 @@ namespace Peg.Base
             { pos_ += 7; return true; }
             return false;
         }
+
         public bool IChar(byte[] s)
         {
             var sLength = s.Length;
@@ -1427,6 +1618,7 @@ namespace Peg.Base
             pos_ += sLength;
             return true;
         }
+
         public bool In(byte c0, byte c1)
         {
             if (pos_ < srcLen_
@@ -1437,6 +1629,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(byte c0, byte c1, byte c2, byte c3)
         {
             if (pos_ < srcLen_)
@@ -1451,6 +1644,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(byte c0, byte c1, byte c2, byte c3, byte c4, byte c5)
         {
             if (pos_ < srcLen_)
@@ -1466,6 +1660,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(byte c0, byte c1, byte c2, byte c3, byte c4, byte c5, byte c6, byte c7)
         {
             if (pos_ < srcLen_)
@@ -1482,6 +1677,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(byte[] s)
         {
             if (pos_ < srcLen_)
@@ -1498,6 +1694,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool NotIn(byte[] s)
         {
             if (pos_ < srcLen_)
@@ -1515,6 +1712,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1)
         {
             if (pos_ < srcLen_
@@ -1525,6 +1723,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2)
         {
             if (pos_ < srcLen_)
@@ -1538,6 +1737,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2, byte c3)
         {
             if (pos_ < srcLen_)
@@ -1551,6 +1751,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2, byte c3, byte c4)
         {
             if (pos_ < srcLen_)
@@ -1564,6 +1765,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2, byte c3, byte c4, byte c5)
         {
             if (pos_ < srcLen_)
@@ -1577,6 +1779,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2, byte c3, byte c4, byte c5, byte c6)
         {
             if (pos_ < srcLen_)
@@ -1590,6 +1793,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte c0, byte c1, byte c2, byte c3, byte c4, byte c5, byte c6, byte c7)
         {
             if (pos_ < srcLen_)
@@ -1603,6 +1807,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(byte[] s)
         {
             if (pos_ < srcLen_)
@@ -1615,6 +1820,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool NotOneOf(byte[] s)
         {
             if (pos_ < srcLen_)
@@ -1628,6 +1834,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(BytesetData bset)
         {
             if (pos_ < srcLen_ && bset.Matches(src_[pos_]))
@@ -1636,39 +1843,53 @@ namespace Peg.Base
             }
             return false;
         }
+
         #endregion PEG '<Literal>' / '<Literal>'/i / [low1-high1,low2-high2..] / [<CharList>]
     }
+
     public class PegCharParser : PegBaseParser
     {
         #region Data members
+
         protected string src_;
         private PegError errors;
+
         #endregion Data members
+
         #region PEG optimizations
+
         public sealed class OptimizedCharset
         {
             public struct Range
             {
-                public Range(char low, char high) { this.low = low; this.high = high; }
+                public Range(char low, char high)
+                {
+                    this.low = low; this.high = high;
+                }
+
                 public char low;
                 public char high;
             }
 
             private readonly System.Collections.BitArray charSet_;
             private readonly bool bNegated_;
+
             public OptimizedCharset(System.Collections.BitArray b)
                 : this(b, false)
             {
             }
+
             public OptimizedCharset(System.Collections.BitArray b, bool bNegated)
             {
                 charSet_ = new System.Collections.BitArray(b);
                 bNegated_ = bNegated;
             }
+
             public OptimizedCharset(Range[] r, char[] c)
                 : this(r, c, false)
             {
             }
+
             public OptimizedCharset(Range[] r, char[] c, bool bNegated)
             {
                 var max = 0;
@@ -1716,7 +1937,6 @@ namespace Peg.Base
                 bNegated_ = bNegated;
             }
 
-
             public bool Matches(char c)
             {
                 var bMatches = c < charSet_.Length && charSet_[c];
@@ -1730,6 +1950,7 @@ namespace Peg.Base
                 }
             }
         }
+
         public sealed class OptimizedLiterals
         {
             internal class Trie
@@ -1790,38 +2011,46 @@ namespace Peg.Base
                             children_[c - cMin_] = new Trie(c, nIndex + 1, subLiterals.ToArray());
                         }
                     }
-
                 }
+
                 internal char cThis_;           //character stored in this node
                 internal bool bLitEnd_;         //end of literal
 
                 internal char cMin_;            //first valid character in children
                 internal Trie[] children_;      //contains the successor node of cThis_;
             }
+
             internal Trie literalsRoot;
+
             public OptimizedLiterals(string[] litAlternatives)
             {
                 literalsRoot = new Trie('\u0000', 0, litAlternatives);
             }
         }
-        #endregion  PEG optimizations
+
+        #endregion PEG optimizations
+
         #region Constructors
+
         public PegCharParser() : this("")
         {
-
-
         }
+
         public PegCharParser(string src) : base(null)
         {
             SetSource(src);
         }
+
         public PegCharParser(string src, TextWriter errOut) : base(errOut)
         {
             SetSource(src);
             nodeCreator_ = DefaultNodeCreator;
         }
+
         #endregion Constructors
+
         #region Overrides
+
         public override string TreeNodeToString(PegNode node)
         {
             var label = base.TreeNodeToString(node);
@@ -1839,13 +2068,17 @@ namespace Peg.Base
             }
             return label;
         }
+
         #endregion Overrides
+
         #region Reinitialization, Source Code access, TextWriter access,Tree Access
+
         public void Construct(string src, TextWriter Fout)
         {
             base.Construct(Fout);
             SetSource(src);
         }
+
         public void SetSource(string src)
         {
             if (src == null)
@@ -1859,9 +2092,16 @@ namespace Peg.Base
                 [0] = 1
             };
         }
-        public string GetSource() { return src_; }
+
+        public string GetSource()
+        {
+            return src_;
+        }
+
         #endregion Reinitialization, Source Code access, TextWriter access,Tree Access
+
         #region Setting host variables
+
         public bool Into(Matcher toMatch, out string into)
         {
             var pos = pos_;
@@ -1876,6 +2116,7 @@ namespace Peg.Base
                 return false;
             }
         }
+
         public bool Into(Matcher toMatch, out PegBegEnd begEnd)
         {
             begEnd.posBeg_ = pos_;
@@ -1883,6 +2124,7 @@ namespace Peg.Base
             begEnd.posEnd_ = pos_;
             return bMatches;
         }
+
         public bool Into(Matcher toMatch, out int into)
         {
             into = 0;
@@ -1898,6 +2140,7 @@ namespace Peg.Base
 
             return true;
         }
+
         public bool Into(Matcher toMatch, out double into)
         {
             into = 0.0;
@@ -1913,28 +2156,35 @@ namespace Peg.Base
 
             return true;
         }
+
         #endregion Setting host variables
+
         #region Error handling
+
         private void LogOutMsg(string sErrKind, string sMsg)
         {
             errors.GetLineAndCol(src_, pos_, out var lineNo, out var colNo);
             errOut_.WriteLine("<{0},{1},{2}>{3}:{4}", lineNo, colNo, maxpos_, sErrKind, sMsg);
             errOut_.Flush();
         }
+
         public virtual bool Fatal(string sMsg)
         {
-
             LogOutMsg("FATAL", sMsg);
             throw new PegException();
             //return false;
         }
+
         public bool Warning(string sMsg)
         {
             LogOutMsg("WARNING", sMsg);
             return true;
         }
+
         #endregion Error handling
-        #region PEG  optimized version of  e* ; e+ 
+
+        #region PEG  optimized version of  e* ; e+
+
         public bool OptRepeat(OptimizedCharset charset)
         {
             for (; pos_ < srcLen_ && charset.Matches(src_[pos_]); ++pos_)
@@ -1944,6 +2194,7 @@ namespace Peg.Base
 
             return true;
         }
+
         public bool PlusRepeat(OptimizedCharset charset)
         {
             var pos0 = pos_;
@@ -1954,14 +2205,18 @@ namespace Peg.Base
 
             return pos_ > pos0;
         }
+
         #endregion PEG  optimized version of  e* ; e+
+
         #region PEG '<Literal>' / '<Literal>'/i / [low1-high1,low2-high2..] / [<CharList>]
+
         public bool Char(char c1)
         {
             if (pos_ < srcLen_ && src_[pos_] == c1)
             { ++pos_; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2)
         {
             if (pos_ + 1 < srcLen_
@@ -1970,6 +2225,7 @@ namespace Peg.Base
             { pos_ += 2; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3)
         {
             if (pos_ + 2 < srcLen_
@@ -1979,6 +2235,7 @@ namespace Peg.Base
             { pos_ += 3; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3, char c4)
         {
             if (pos_ + 3 < srcLen_
@@ -1989,6 +2246,7 @@ namespace Peg.Base
             { pos_ += 4; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3, char c4, char c5)
         {
             if (pos_ + 4 < srcLen_
@@ -2000,6 +2258,7 @@ namespace Peg.Base
             { pos_ += 5; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3, char c4, char c5, char c6)
         {
             if (pos_ + 5 < srcLen_
@@ -2012,6 +2271,7 @@ namespace Peg.Base
             { pos_ += 6; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3, char c4, char c5, char c6, char c7)
         {
             if (pos_ + 6 < srcLen_
@@ -2025,6 +2285,7 @@ namespace Peg.Base
             { pos_ += 7; return true; }
             return false;
         }
+
         public bool Char(char c1, char c2, char c3, char c4, char c5, char c6, char c7, char c8)
         {
             if (pos_ + 7 < srcLen_
@@ -2039,6 +2300,7 @@ namespace Peg.Base
             { pos_ += 8; return true; }
             return false;
         }
+
         public bool Char(string s)
         {
             var sLength = s.Length;
@@ -2057,12 +2319,14 @@ namespace Peg.Base
             pos_ += sLength;
             return true;
         }
+
         public bool IChar(char c1)
         {
             if (pos_ < srcLen_ && char.ToUpper(src_[pos_]) == c1)
             { ++pos_; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2)
         {
             if (pos_ + 1 < srcLen_
@@ -2071,6 +2335,7 @@ namespace Peg.Base
             { pos_ += 2; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2, char c3)
         {
             if (pos_ + 2 < srcLen_
@@ -2080,6 +2345,7 @@ namespace Peg.Base
             { pos_ += 3; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2, char c3, char c4)
         {
             if (pos_ + 3 < srcLen_
@@ -2090,6 +2356,7 @@ namespace Peg.Base
             { pos_ += 4; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2, char c3, char c4, char c5)
         {
             if (pos_ + 4 < srcLen_
@@ -2101,6 +2368,7 @@ namespace Peg.Base
             { pos_ += 5; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2, char c3, char c4, char c5, char c6)
         {
             if (pos_ + 5 < srcLen_
@@ -2113,6 +2381,7 @@ namespace Peg.Base
             { pos_ += 6; return true; }
             return false;
         }
+
         public bool IChar(char c1, char c2, char c3, char c4, char c5, char c6, char c7)
         {
             if (pos_ + 6 < srcLen_
@@ -2126,6 +2395,7 @@ namespace Peg.Base
             { pos_ += 7; return true; }
             return false;
         }
+
         public bool IChar(string s)
         {
             var sLength = s.Length;
@@ -2155,6 +2425,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(char c0, char c1, char c2, char c3)
         {
             if (pos_ < srcLen_)
@@ -2169,6 +2440,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(char c0, char c1, char c2, char c3, char c4, char c5)
         {
             if (pos_ < srcLen_)
@@ -2184,6 +2456,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(char c0, char c1, char c2, char c3, char c4, char c5, char c6, char c7)
         {
             if (pos_ < srcLen_)
@@ -2200,6 +2473,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool In(string s)
         {
             if (pos_ < srcLen_)
@@ -2217,6 +2491,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool NotIn(string s)
         {
             if (pos_ < srcLen_)
@@ -2234,6 +2509,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1)
         {
             if (pos_ < srcLen_
@@ -2244,6 +2520,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2)
         {
             if (pos_ < srcLen_)
@@ -2257,6 +2534,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2, char c3)
         {
             if (pos_ < srcLen_)
@@ -2270,6 +2548,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2, char c3, char c4)
         {
             if (pos_ < srcLen_)
@@ -2283,6 +2562,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2, char c3, char c4, char c5)
         {
             if (pos_ < srcLen_)
@@ -2296,6 +2576,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2, char c3, char c4, char c5, char c6)
         {
             if (pos_ < srcLen_)
@@ -2309,6 +2590,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(char c0, char c1, char c2, char c3, char c4, char c5, char c6, char c7)
         {
             if (pos_ < srcLen_)
@@ -2322,6 +2604,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(string s)
         {
             if (pos_ < srcLen_)
@@ -2334,6 +2617,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool NotOneOf(string s)
         {
             if (pos_ < srcLen_)
@@ -2346,6 +2630,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOf(OptimizedCharset cset)
         {
             if (pos_ < srcLen_ && cset.Matches(src_[pos_]))
@@ -2354,6 +2639,7 @@ namespace Peg.Base
             }
             return false;
         }
+
         public bool OneOfLiterals(OptimizedLiterals litAlt)
         {
             var node = litAlt.literalsRoot;
@@ -2383,7 +2669,9 @@ namespace Peg.Base
                 return false;
             }
         }
+
         #endregion PEG '<Literal>' / '<Literal>'/i / [low1-high1,low2-high2..] / [<CharList>]
     }
+
     #endregion Parsers
 }

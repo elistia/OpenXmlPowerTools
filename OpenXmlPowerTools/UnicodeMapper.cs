@@ -1,19 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-/***************************************************************************
-
-Copyright (c) Microsoft Corporation 2016.
-
-This code is licensed using the Microsoft Public License (Ms-PL).  The text of the license can be found here:
-
-http://www.microsoft.com/resources/sharedsource/licensingbasics/publiclicense.mspx
-
-Developer: Thomas Barnekow
-Email: thomas@barnekow.info
-
-***************************************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +12,7 @@ namespace OpenXmlPowerTools
     {
         // Unicode character values.
         public static readonly char StartOfHeading = '\u0001';
+
         public static readonly char HorizontalTabulation = '\u0009';
         public static readonly char LineFeed = '\u000A';
         public static readonly char FormFeed = '\u000C';
@@ -34,6 +22,7 @@ namespace OpenXmlPowerTools
 
         // Unicode area boundaries.
         public static readonly char StartOfPrivateUseArea = '\uE000';
+
         public static readonly char StartOfSymbolArea = '\uF000';
         public static readonly char EndOfPrivateUseArea = '\uF8FF';
 
@@ -121,8 +110,10 @@ namespace OpenXmlPowerTools
                 {
                     case "begin":
                         return "{";
+
                     case "end":
                         return "}";
+
                     default:
                         return "_";
                 }

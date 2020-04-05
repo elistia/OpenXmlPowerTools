@@ -1147,7 +1147,6 @@ namespace OpenXmlPowerTools
             }
         }
 
-
         private static object TransformRemoveNamespace(XNode node)
         {
             if (node == null)
@@ -1198,32 +1197,6 @@ namespace OpenXmlPowerTools
                 case 48: return "##0.0E+0";
                 case 49: return "@";
                 default: return null;
-            }
-        }
-
-        private static void AddOrReplaceElement(XElement props, XName childElementName, int value)
-        {
-            var existingElement = props.Element(childElementName);
-            if (existingElement != null)
-            {
-                existingElement.ReplaceWith(new XElement(childElementName, new XAttribute("Val", value)));
-            }
-            else
-            {
-                props.Add(new XElement(childElementName, new XAttribute("Val", value)));
-            }
-        }
-
-        private static void AddOrReplaceElement(XElement props, XName childElementName, string value)
-        {
-            var existingElement = props.Element(childElementName);
-            if (existingElement != null)
-            {
-                existingElement.ReplaceWith(new XElement(childElementName, new XAttribute("Val", value)));
-            }
-            else
-            {
-                props.Add(new XElement(childElementName, new XAttribute("Val", value)));
             }
         }
 

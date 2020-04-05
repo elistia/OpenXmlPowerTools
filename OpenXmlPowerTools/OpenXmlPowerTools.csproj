@@ -53,6 +53,7 @@ It supports scenarios such as:
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>-->
+   
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 

@@ -1218,11 +1218,11 @@ namespace OpenXmlPowerTools
             { W.clrSchemeMapping, 860},
             { W.doNotIncludeSubdocsInStats, 870},
             { W.doNotAutoCompressPictures, 880},
-            { W.forceUpgrade, 890}, 
-            //{W.captions, 900}, 
+            { W.forceUpgrade, 890},
+            //{W.captions, 900},
             { W.readModeInkLockDown, 910},
-            { W.smartTagType, 920}, 
-            //{W.sl:schemaLibrary, 930}, 
+            { W.smartTagType, 920},
+            //{W.sl:schemaLibrary, 930},
             { W.doNotEmbedSmartTags, 940},
             { W.decimalSymbol, 950},
             { W.listSeparator, 960},
@@ -1230,7 +1230,7 @@ namespace OpenXmlPowerTools
 
 #if false
 // from the schema in the standard
-        
+
 writeProtection
 view
 zoom
@@ -1702,11 +1702,8 @@ listSeparator
                     {
                         using (var sr = new StreamReader(stream))
                         {
-                            //string input = @"    <![if gte mso 9]><v:imagedata o:relid=""rId15""";
                             var input = sr.ReadToEnd();
                             var pattern = @"<!\[(?<test>.*)\]>";
-                            //string replacement = "<![CDATA[${test}]]>";
-                            //fixedContent = Regex.Replace(input, pattern, replacement, RegexOptions.Multiline);
                             fixedContent = Regex.Replace(input, pattern, m =>
                             {
                                 var g = m.Groups[1].Value;
@@ -1721,7 +1718,6 @@ listSeparator
                             },
                             RegexOptions.Multiline);
 
-                            //var input = @"xxxxx o:relid=""rId1"" o:relid=""rId1"" xxxxx";
                             pattern = @"o:relid=[""'](?<id1>.*)[""'] o:relid=[""'](?<id2>.*)[""']";
                             fixedContent = Regex.Replace(fixedContent, pattern, m =>
                             {
@@ -1803,7 +1799,6 @@ listSeparator
             }
             if (cid.Length == 3)
             {
-
                 return CharToInt(cid[0]) * 676 + CharToInt(cid[1]) * 26 + CharToInt(cid[2]) + 702;
             }
             throw new ColumnReferenceOutOfRange(cid);
@@ -2227,6 +2222,7 @@ listSeparator
     }
 
 #if !NET35
+
     public static class UriFixer
     {
         public static void FixInvalidUri(Stream fs, Func<string, Uri> invalidUriHandler)
@@ -2292,12 +2288,14 @@ listSeparator
             }
         }
     }
+
 #endif
 
     public static class ACTIVEX
     {
         public static readonly XNamespace activex =
             "http://schemas.microsoft.com/office/2006/activeX";
+
         public static readonly XName classid = activex + "classid";
         public static readonly XName font = activex + "font";
         public static readonly XName license = activex + "license";
@@ -2312,6 +2310,7 @@ listSeparator
     {
         public static readonly XNamespace biblio =
             "http://schemas.microsoft.com/office/word/2004/10/bibliography";
+
         public static readonly XName AlbumTitle = biblio + "AlbumTitle";
         public static readonly XName Artist = biblio + "Artist";
         public static readonly XName Author = biblio + "Author";
@@ -2364,6 +2363,7 @@ listSeparator
     {
         public static readonly XNamespace ink =
             "http://schemas.microsoft.com/ink/2010/main";
+
         public static readonly XName context = ink + "context";
         public static readonly XName sourceLink = ink + "sourceLink";
     }
@@ -2440,6 +2440,7 @@ listSeparator
     {
         public static readonly XNamespace wne =
             "http://schemas.microsoft.com/office/word/2006/wordml";
+
         public static readonly XName acd = wne + "acd";
         public static readonly XName acdEntry = wne + "acdEntry";
         public static readonly XName acdManifest = wne + "acdManifest";
@@ -2491,6 +2492,7 @@ listSeparator
     {
         public static readonly XNamespace a =
             "http://schemas.openxmlformats.org/drawingml/2006/main";
+
         public static readonly XName accent1 = a + "accent1";
         public static readonly XName accent2 = a + "accent2";
         public static readonly XName accent3 = a + "accent3";
@@ -2812,6 +2814,7 @@ listSeparator
     {
         public static readonly XNamespace a14 =
             "http://schemas.microsoft.com/office/drawing/2010/main";
+
         public static readonly XName artisticChalkSketch = a14 + "artisticChalkSketch";
         public static readonly XName artisticGlass = a14 + "artisticGlass";
         public static readonly XName artisticGlowEdges = a14 + "artisticGlowEdges";
@@ -2847,6 +2850,7 @@ listSeparator
     {
         public static readonly XNamespace c =
             "http://schemas.openxmlformats.org/drawingml/2006/chart";
+
         public static readonly XName applyToEnd = c + "applyToEnd";
         public static readonly XName applyToFront = c + "applyToFront";
         public static readonly XName applyToSides = c + "applyToSides";
@@ -3069,6 +3073,7 @@ listSeparator
     {
         public static readonly XNamespace cdr =
             "http://schemas.openxmlformats.org/drawingml/2006/chartDrawing";
+
         public static readonly XName absSizeAnchor = cdr + "absSizeAnchor";
         public static readonly XName blipFill = cdr + "blipFill";
         public static readonly XName cNvCxnSpPr = cdr + "cNvCxnSpPr";
@@ -3104,6 +3109,7 @@ listSeparator
     {
         public static readonly XNamespace com =
             "http://schemas.openxmlformats.org/drawingml/2006/compatibility";
+
         public static readonly XName legacyDrawing = com + "legacyDrawing";
     }
 
@@ -3111,6 +3117,7 @@ listSeparator
     {
         public static readonly XNamespace cp =
             "http://schemas.openxmlformats.org/package/2006/metadata/core-properties";
+
         public static readonly XName category = cp + "category";
         public static readonly XName contentStatus = cp + "contentStatus";
         public static readonly XName contentType = cp + "contentType";
@@ -3125,6 +3132,7 @@ listSeparator
     {
         public static readonly XNamespace custpro =
             "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties";
+
         public static readonly XName Properties = custpro + "Properties";
         public static readonly XName property = custpro + "property";
     }
@@ -3133,6 +3141,7 @@ listSeparator
     {
         public static readonly XNamespace dc =
             "http://purl.org/dc/elements/1.1/";
+
         public static readonly XName creator = dc + "creator";
         public static readonly XName description = dc + "description";
         public static readonly XName subject = dc + "subject";
@@ -3143,6 +3152,7 @@ listSeparator
     {
         public static readonly XNamespace dcterms =
             "http://purl.org/dc/terms/";
+
         public static readonly XName created = dcterms + "created";
         public static readonly XName modified = dcterms + "modified";
     }
@@ -3151,6 +3161,7 @@ listSeparator
     {
         public static readonly XNamespace dgm =
             "http://schemas.openxmlformats.org/drawingml/2006/diagram";
+
         public static readonly XName adj = dgm + "adj";
         public static readonly XName adjLst = dgm + "adjLst";
         public static readonly XName alg = dgm + "alg";
@@ -3216,6 +3227,7 @@ listSeparator
     {
         public static readonly XNamespace dgm14 =
             "http://schemas.microsoft.com/office/drawing/2010/diagram";
+
         public static readonly XName cNvPr = dgm14 + "cNvPr";
         public static readonly XName recolorImg = dgm14 + "recolorImg";
     }
@@ -3224,6 +3236,7 @@ listSeparator
     {
         public static readonly XNamespace digsig =
             "http://schemas.microsoft.com/office/2006/digsig";
+
         public static readonly XName ApplicationVersion = digsig + "ApplicationVersion";
         public static readonly XName ColorDepth = digsig + "ColorDepth";
         public static readonly XName HorizontalResolution = digsig + "HorizontalResolution";
@@ -3247,6 +3260,7 @@ listSeparator
     {
         public static readonly XNamespace ds =
             "http://schemas.openxmlformats.org/officeDocument/2006/customXml";
+
         public static readonly XName datastoreItem = ds + "datastoreItem";
         public static readonly XName itemID = ds + "itemID";
         public static readonly XName schemaRef = ds + "schemaRef";
@@ -3258,6 +3272,7 @@ listSeparator
     {
         public static readonly XNamespace dsp =
             "http://schemas.microsoft.com/office/drawing/2008/diagram";
+
         public static readonly XName dataModelExt = dsp + "dataModelExt";
     }
 
@@ -3265,6 +3280,7 @@ listSeparator
     {
         public static readonly XNamespace ep =
             "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
+
         public static readonly XName Application = ep + "Application";
         public static readonly XName AppVersion = ep + "AppVersion";
         public static readonly XName Characters = ep + "Characters";
@@ -3298,6 +3314,7 @@ listSeparator
     {
         public static readonly XNamespace lc =
             "http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas";
+
         public static readonly XName lockedCanvas = lc + "lockedCanvas";
     }
 
@@ -3305,6 +3322,7 @@ listSeparator
     {
         public static readonly XNamespace m =
             "http://schemas.openxmlformats.org/officeDocument/2006/math";
+
         public static readonly XName acc = m + "acc";
         public static readonly XName accPr = m + "accPr";
         public static readonly XName aln = m + "aln";
@@ -3437,6 +3455,7 @@ listSeparator
     {
         public static readonly XNamespace mc =
             "http://schemas.openxmlformats.org/markup-compatibility/2006";
+
         public static readonly XName AlternateContent = mc + "AlternateContent";
         public static readonly XName Choice = mc + "Choice";
         public static readonly XName Fallback = mc + "Fallback";
@@ -3448,6 +3467,7 @@ listSeparator
     {
         public static readonly XNamespace mdssi =
             "http://schemas.openxmlformats.org/package/2006/digital-signature";
+
         public static readonly XName Format = mdssi + "Format";
         public static readonly XName RelationshipReference = mdssi + "RelationshipReference";
         public static readonly XName SignatureTime = mdssi + "SignatureTime";
@@ -3458,6 +3478,7 @@ listSeparator
     {
         public static readonly XNamespace mp =
             "http://schemas.microsoft.com/office/mac/powerpoint/2008/main";
+
         public static readonly XName cube = mp + "cube";
         public static readonly XName flip = mp + "flip";
         public static readonly XName transition = mp + "transition";
@@ -3467,6 +3488,7 @@ listSeparator
     {
         public static readonly XNamespace mv =
             "urn:schemas-microsoft-com:mac:vml";
+
         public static readonly XName blur = mv + "blur";
         public static readonly XName complextextbox = mv + "complextextbox";
     }
@@ -4124,6 +4146,7 @@ listSeparator
     {
         public static readonly XNamespace o =
             "urn:schemas-microsoft-com:office:office";
+
         public static readonly XName allowincell = o + "allowincell";
         public static readonly XName allowoverlap = o + "allowoverlap";
         public static readonly XName althref = o + "althref";
@@ -4215,6 +4238,7 @@ listSeparator
     {
         public static readonly XNamespace p =
             "http://schemas.openxmlformats.org/presentationml/2006/main";
+
         public static readonly XName anim = p + "anim";
         public static readonly XName animClr = p + "animClr";
         public static readonly XName animEffect = p + "animEffect";
@@ -4419,6 +4443,7 @@ listSeparator
     {
         public static readonly XNamespace p14 =
             "http://schemas.microsoft.com/office/powerpoint/2010/main";
+
         public static readonly XName bmk = p14 + "bmk";
         public static readonly XName bmkLst = p14 + "bmkLst";
         public static readonly XName bmkTgt = p14 + "bmkTgt";
@@ -4476,6 +4501,7 @@ listSeparator
     {
         public static readonly XNamespace p15 =
             "http://schemas.microsoft.com/office15/powerpoint";
+
         public static readonly XName extElement = p15 + "extElement";
     }
 
@@ -4491,6 +4517,7 @@ listSeparator
     {
         public static readonly XNamespace pic =
             "http://schemas.openxmlformats.org/drawingml/2006/picture";
+
         public static readonly XName blipFill = pic + "blipFill";
         public static readonly XName cNvPicPr = pic + "cNvPicPr";
         public static readonly XName cNvPr = pic + "cNvPr";
@@ -4498,11 +4525,13 @@ listSeparator
         public static readonly XName _pic = pic + "pic";
         public static readonly XName spPr = pic + "spPr";
     }
+
     public static class SVG
     {
         public static readonly XNamespace svg = "http://schemas.microsoft.com/office/drawing/2016/SVG/main";
         public static readonly XName svgBlip = svg + "svgBlip";
     }
+
     public static class Plegacy
     {
         public static readonly XNamespace plegacy = "urn:schemas-microsoft-com:office:powerpoint";
@@ -4513,6 +4542,7 @@ listSeparator
     {
         public static readonly XNamespace r =
             "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+
         public static readonly XName blip = r + "blip";
         public static readonly XName cs = r + "cs";
         public static readonly XName dm = r + "dm";
@@ -4530,6 +4560,7 @@ listSeparator
     {
         public static readonly XNamespace s =
             "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
         public static readonly XName alignment = s + "alignment";
         public static readonly XName anchor = s + "anchor";
         public static readonly XName author = s + "author";
@@ -4899,6 +4930,7 @@ listSeparator
     {
         public static readonly XNamespace sl =
             "http://schemas.openxmlformats.org/schemaLibrary/2006/main";
+
         public static readonly XName manifestLocation = sl + "manifestLocation";
         public static readonly XName schema = sl + "schema";
         public static readonly XName schemaLibrary = sl + "schemaLibrary";
@@ -4909,6 +4941,7 @@ listSeparator
     {
         public static readonly XNamespace sle =
             "http://schemas.microsoft.com/office/drawing/2010/slicer";
+
         public static readonly XName slicer = sle + "slicer";
     }
 
@@ -4916,6 +4949,7 @@ listSeparator
     {
         public static readonly XNamespace vml =
             "urn:schemas-microsoft-com:vml";
+
         public static readonly XName arc = vml + "arc";
         public static readonly XName background = vml + "background";
         public static readonly XName curve = vml + "curve";
@@ -4946,6 +4980,7 @@ listSeparator
     {
         public static readonly XNamespace vt =
             "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes";
+
         public static readonly XName _bool = vt + "bool";
         public static readonly XName filetime = vt + "filetime";
         public static readonly XName i4 = vt + "i4";
@@ -4960,6 +4995,7 @@ listSeparator
     {
         public static readonly XNamespace w =
             "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
         public static readonly XName abstractNum = w + "abstractNum";
         public static readonly XName abstractNumId = w + "abstractNumId";
         public static readonly XName accent1 = w + "accent1";
@@ -5801,6 +5837,7 @@ listSeparator
     {
         public static readonly XNamespace w10 =
             "urn:schemas-microsoft-com:office:word";
+
         public static readonly XName anchorlock = w10 + "anchorlock";
         public static readonly XName borderbottom = w10 + "borderbottom";
         public static readonly XName borderleft = w10 + "borderleft";
@@ -5813,6 +5850,7 @@ listSeparator
     {
         public static readonly XNamespace w14 =
             "http://schemas.microsoft.com/office/word/2010/wordml";
+
         public static readonly XName algn = w14 + "algn";
         public static readonly XName alpha = w14 + "alpha";
         public static readonly XName ang = w14 + "ang";
@@ -5957,6 +5995,7 @@ listSeparator
     {
         public static readonly XNamespace w3digsig =
             "http://www.w3.org/2000/09/xmldsig#";
+
         public static readonly XName CanonicalizationMethod = w3digsig + "CanonicalizationMethod";
         public static readonly XName DigestMethod = w3digsig + "DigestMethod";
         public static readonly XName DigestValue = w3digsig + "DigestValue";
@@ -5986,6 +6025,7 @@ listSeparator
     {
         public static readonly XNamespace wp =
             "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+
         public static readonly XName align = wp + "align";
         public static readonly XName anchor = wp + "anchor";
         public static readonly XName cNvGraphicFramePr = wp + "cNvGraphicFramePr";
@@ -6011,6 +6051,7 @@ listSeparator
     {
         public static readonly XNamespace wp14 =
             "http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing";
+
         public static readonly XName anchorId = wp14 + "anchorId";
         public static readonly XName editId = wp14 + "editId";
         public static readonly XName pctHeight = wp14 + "pctHeight";
@@ -6024,6 +6065,7 @@ listSeparator
     {
         public static readonly XNamespace wps =
             "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
+
         public static readonly XName altTxbx = wps + "altTxbx";
         public static readonly XName bodyPr = wps + "bodyPr";
         public static readonly XName cNvSpPr = wps + "cNvSpPr";
@@ -6038,6 +6080,7 @@ listSeparator
     {
         public static readonly XNamespace x =
             "urn:schemas-microsoft-com:office:excel";
+
         public static readonly XName Anchor = x + "Anchor";
         public static readonly XName AutoFill = x + "AutoFill";
         public static readonly XName ClientData = x + "ClientData";
@@ -6051,6 +6094,7 @@ listSeparator
     {
         public static readonly XNamespace xdr =
             "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
+
         public static readonly XName absoluteAnchor = xdr + "absoluteAnchor";
         public static readonly XName blipFill = xdr + "blipFill";
         public static readonly XName clientData = xdr + "clientData";
@@ -6093,6 +6137,7 @@ listSeparator
     {
         public static readonly XNamespace xdr14 =
             "http://schemas.microsoft.com/office/excel/2010/spreadsheetDrawing";
+
         public static readonly XName cNvContentPartPr = xdr14 + "cNvContentPartPr";
         public static readonly XName cNvPr = xdr14 + "cNvPr";
         public static readonly XName nvContentPartPr = xdr14 + "nvContentPartPr";
@@ -6104,6 +6149,7 @@ listSeparator
     {
         public static readonly XNamespace xm =
             "http://schemas.microsoft.com/office/excel/2006/main";
+
         public static readonly XName f = xm + "f";
         public static readonly XName _ref = xm + "ref";
         public static readonly XName sqref = xm + "sqref";
@@ -6113,9 +6159,9 @@ listSeparator
     {
         public static readonly XNamespace xsi =
             "http://www.w3.org/2001/XMLSchema-instance";
+
         public static readonly XName type = xsi + "type";
     }
-
 
     /************************************* end generated classes *************************************/
 
