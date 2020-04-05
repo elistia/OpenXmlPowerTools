@@ -1,19 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using DocumentFormat.OpenXml.Packaging;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
-using System.IO.Packaging;
 using System.IO.Compression;
+using System.IO.Packaging;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using System.Linq;
 using System.Xml.Linq;
-using System.Collections.Generic;
-using DocumentFormat.OpenXml.Packaging;
-using System.Drawing;
-using Font = System.Drawing.Font;
 using FontFamily = System.Drawing.FontFamily;
 
 // ReSharper disable InconsistentNaming
@@ -24,22 +23,32 @@ namespace OpenXmlPowerTools
     {
         public static XDocument GetXDocument(this OpenXmlPart part)
         {
-            if (part == null) throw new ArgumentNullException("part");
+            if (part == null)
+            {
+                throw new ArgumentNullException("part");
+            }
 
-            XDocument partXDocument = part.Annotation<XDocument>();
-            if (partXDocument != null) return partXDocument;
+            var partXDocument = part.Annotation<XDocument>();
+            if (partXDocument != null)
+            {
+                return partXDocument;
+            }
 
-            using (Stream partStream = part.GetStream())
+            using (var partStream = part.GetStream())
             {
                 if (partStream.Length == 0)
                 {
-                    partXDocument = new XDocument();
-                    partXDocument.Declaration = new XDeclaration("1.0", "UTF-8", "yes");
+                    partXDocument = new XDocument
+                    {
+                        Declaration = new XDeclaration("1.0", "UTF-8", "yes")
+                    };
                 }
                 else
                 {
-                    using (XmlReader partXmlReader = XmlReader.Create(partStream))
+                    using (var partXmlReader = XmlReader.Create(partStream))
+                    {
                         partXDocument = XDocument.Load(partXmlReader);
+                    }
                 }
             }
 
@@ -49,13 +58,19 @@ namespace OpenXmlPowerTools
 
         public static XDocument GetXDocument(this OpenXmlPart part, out XmlNamespaceManager namespaceManager)
         {
-            if (part == null) throw new ArgumentNullException("part");
+            if (part == null)
+            {
+                throw new ArgumentNullException("part");
+            }
 
             namespaceManager = part.Annotation<XmlNamespaceManager>();
-            XDocument partXDocument = part.Annotation<XDocument>();
+            var partXDocument = part.Annotation<XDocument>();
             if (partXDocument != null)
             {
-                if (namespaceManager != null) return partXDocument;
+                if (namespaceManager != null)
+                {
+                    return partXDocument;
+                }
 
                 namespaceManager = GetManagerFromXDocument(partXDocument);
                 part.AddAnnotation(namespaceManager);
@@ -63,12 +78,14 @@ namespace OpenXmlPowerTools
                 return partXDocument;
             }
 
-            using (Stream partStream = part.GetStream())
+            using (var partStream = part.GetStream())
             {
                 if (partStream.Length == 0)
                 {
-                    partXDocument = new XDocument();
-                    partXDocument.Declaration = new XDeclaration("1.0", "UTF-8", "yes");
+                    partXDocument = new XDocument
+                    {
+                        Declaration = new XDeclaration("1.0", "UTF-8", "yes")
+                    };
 
                     part.AddAnnotation(partXDocument);
 
@@ -76,7 +93,7 @@ namespace OpenXmlPowerTools
                 }
                 else
                 {
-                    using (XmlReader partXmlReader = XmlReader.Create(partStream))
+                    using (var partXmlReader = XmlReader.Create(partStream))
                     {
                         partXDocument = XDocument.Load(partXmlReader);
                         namespaceManager = new XmlNamespaceManager(partXmlReader.NameTable);
@@ -92,15 +109,20 @@ namespace OpenXmlPowerTools
 
         public static void PutXDocument(this OpenXmlPart part)
         {
-            if (part == null) throw new ArgumentNullException("part");
+            if (part == null)
+            {
+                throw new ArgumentNullException("part");
+            }
 
-            XDocument partXDocument = part.GetXDocument();
+            var partXDocument = part.GetXDocument();
             if (partXDocument != null)
             {
 #if true
-                using (Stream partStream = part.GetStream(FileMode.Create, FileAccess.Write))
-                using (XmlWriter partXmlWriter = XmlWriter.Create(partStream))
+                using (var partStream = part.GetStream(FileMode.Create, FileAccess.Write))
+                using (var partXmlWriter = XmlWriter.Create(partStream))
+                {
                     partXDocument.Save(partXmlWriter);
+                }
 #else
                 byte[] array = Encoding.UTF8.GetBytes(partXDocument.ToString(SaveOptions.DisableFormatting));
                 using (MemoryStream ms = new MemoryStream(array))
@@ -111,31 +133,47 @@ namespace OpenXmlPowerTools
 
         public static void PutXDocumentWithFormatting(this OpenXmlPart part)
         {
-            if (part == null) throw new ArgumentNullException("part");
+            if (part == null)
+            {
+                throw new ArgumentNullException("part");
+            }
 
-            XDocument partXDocument = part.GetXDocument();
+            var partXDocument = part.GetXDocument();
             if (partXDocument != null)
             {
-                using (Stream partStream = part.GetStream(FileMode.Create, FileAccess.Write))
+                using (var partStream = part.GetStream(FileMode.Create, FileAccess.Write))
                 {
-                    XmlWriterSettings settings = new XmlWriterSettings();
-                    settings.Indent = true;
-                    settings.OmitXmlDeclaration = true;
-                    settings.NewLineOnAttributes = true;
-                    using (XmlWriter partXmlWriter = XmlWriter.Create(partStream, settings))
+                    var settings = new XmlWriterSettings
+                    {
+                        Indent = true,
+                        OmitXmlDeclaration = true,
+                        NewLineOnAttributes = true
+                    };
+                    using (var partXmlWriter = XmlWriter.Create(partStream, settings))
+                    {
                         partXDocument.Save(partXmlWriter);
+                    }
                 }
             }
         }
 
         public static void PutXDocument(this OpenXmlPart part, XDocument document)
         {
-            if (part == null) throw new ArgumentNullException("part");
-            if (document == null) throw new ArgumentNullException("document");
+            if (part == null)
+            {
+                throw new ArgumentNullException("part");
+            }
 
-            using (Stream partStream = part.GetStream(FileMode.Create, FileAccess.Write))
-            using (XmlWriter partXmlWriter = XmlWriter.Create(partStream))
+            if (document == null)
+            {
+                throw new ArgumentNullException("document");
+            }
+
+            using (var partStream = part.GetStream(FileMode.Create, FileAccess.Write))
+            using (var partXmlWriter = XmlWriter.Create(partStream))
+            {
                 document.Save(partXmlWriter);
+            }
 
             part.RemoveAnnotations<XDocument>();
             part.AddAnnotation(document);
@@ -143,25 +181,28 @@ namespace OpenXmlPowerTools
 
         private static XmlNamespaceManager GetManagerFromXDocument(XDocument xDocument)
         {
-            XmlReader reader = xDocument.CreateReader();
-            XDocument newXDoc = XDocument.Load(reader);
+            var reader = xDocument.CreateReader();
+            var newXDoc = XDocument.Load(reader);
 
-            XElement rootElement = xDocument.Elements().FirstOrDefault();
+            var rootElement = xDocument.Elements().FirstOrDefault();
             rootElement.ReplaceWith(newXDoc.Root);
 
-            XmlNameTable nameTable = reader.NameTable;
-            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(nameTable);
+            var nameTable = reader.NameTable;
+            var namespaceManager = new XmlNamespaceManager(nameTable);
             return namespaceManager;
         }
 
         public static IEnumerable<XElement> LogicalChildrenContent(this XElement element)
         {
             if (element.Name == W.document)
+            {
                 return element.Descendants(W.body).Take(1);
+            }
 
             if (element.Name == W.body ||
                 element.Name == W.tc ||
                 element.Name == W.txbxContent)
+            {
                 return element
                     .DescendantsTrimmed(e =>
                         e.Name == W.tbl ||
@@ -169,18 +210,24 @@ namespace OpenXmlPowerTools
                     .Where(e =>
                         e.Name == W.p ||
                         e.Name == W.tbl);
+            }
 
             if (element.Name == W.tbl)
+            {
                 return element
                     .DescendantsTrimmed(W.tr)
                     .Where(e => e.Name == W.tr);
+            }
 
             if (element.Name == W.tr)
+            {
                 return element
                     .DescendantsTrimmed(W.tc)
                     .Where(e => e.Name == W.tc);
+            }
 
             if (element.Name == W.p)
+            {
                 return element
                     .DescendantsTrimmed(e => e.Name == W.r ||
                         e.Name == W.pict ||
@@ -188,13 +235,17 @@ namespace OpenXmlPowerTools
                     .Where(e => e.Name == W.r ||
                         e.Name == W.pict ||
                         e.Name == W.drawing);
+            }
 
             if (element.Name == W.r)
+            {
                 return element
                     .DescendantsTrimmed(e => W.SubRunLevelContent.Contains(e.Name))
                     .Where(e => W.SubRunLevelContent.Contains(e.Name));
+            }
 
             if (element.Name == MC.AlternateContent)
+            {
                 return element
                     .DescendantsTrimmed(e =>
                         e.Name == W.pict ||
@@ -203,20 +254,27 @@ namespace OpenXmlPowerTools
                     .Where(e =>
                         e.Name == W.pict ||
                         e.Name == W.drawing);
+            }
 
             if (element.Name == W.pict || element.Name == W.drawing)
+            {
                 return element
                     .DescendantsTrimmed(W.txbxContent)
                     .Where(e => e.Name == W.txbxContent);
+            }
 
             return XElement.EmptySequence;
         }
 
         public static IEnumerable<XElement> LogicalChildrenContent(this IEnumerable<XElement> source)
         {
-            foreach (XElement e1 in source)
-                foreach (XElement e2 in e1.LogicalChildrenContent())
+            foreach (var e1 in source)
+            {
+                foreach (var e2 in e1.LogicalChildrenContent())
+                {
                     yield return e2;
+                }
+            }
         }
 
         public static IEnumerable<XElement> LogicalChildrenContent(this XElement element, XName name)
@@ -226,9 +284,13 @@ namespace OpenXmlPowerTools
 
         public static IEnumerable<XElement> LogicalChildrenContent(this IEnumerable<XElement> source, XName name)
         {
-            foreach (XElement e1 in source)
-                foreach (XElement e2 in e1.LogicalChildrenContent(name))
+            foreach (var e1 in source)
+            {
+                foreach (var e2 in e1.LogicalChildrenContent(name))
+                {
                     yield return e2;
+                }
+            }
         }
 
         public static IEnumerable<OpenXmlPart> ContentParts(this WordprocessingDocument doc)
@@ -236,16 +298,24 @@ namespace OpenXmlPowerTools
             yield return doc.MainDocumentPart;
 
             foreach (var hdr in doc.MainDocumentPart.HeaderParts)
+            {
                 yield return hdr;
+            }
 
             foreach (var ftr in doc.MainDocumentPart.FooterParts)
+            {
                 yield return ftr;
+            }
 
             if (doc.MainDocumentPart.FootnotesPart != null)
+            {
                 yield return doc.MainDocumentPart.FootnotesPart;
+            }
 
             if (doc.MainDocumentPart.EndnotesPart != null)
+            {
                 yield return doc.MainDocumentPart.EndnotesPart;
+            }
         }
 
         /// <summary>
@@ -259,21 +329,28 @@ namespace OpenXmlPowerTools
         public static List<OpenXmlPart> GetAllParts(this OpenXmlPartContainer container)
         {
             // Use a HashSet so that parts are processed only once.
-            HashSet<OpenXmlPart> partList = new HashSet<OpenXmlPart>();
+            var partList = new HashSet<OpenXmlPart>();
 
-            foreach (IdPartPair p in container.Parts)
+            foreach (var p in container.Parts)
+            {
                 AddPart(partList, p.OpenXmlPart);
+            }
 
             return partList.OrderBy(p => p.ContentType).ThenBy(p => p.Uri.ToString()).ToList();
         }
 
         private static void AddPart(HashSet<OpenXmlPart> partList, OpenXmlPart part)
         {
-            if (partList.Contains(part)) return;
+            if (partList.Contains(part))
+            {
+                return;
+            }
 
             partList.Add(part);
-            foreach (IdPartPair p in part.Parts)
+            foreach (var p in part.Parts)
+            {
                 AddPart(partList, p.OpenXmlPart);
+            }
         }
     }
 
@@ -291,9 +368,10 @@ namespace OpenXmlPowerTools
 
             if (part.ContentType.EndsWith("xml"))
             {
-                using (Stream str = part.GetStream())
-                using (StreamReader streamReader = new StreamReader(str))
-                using (XmlReader xr = XmlReader.Create(streamReader))
+                using (var str = part.GetStream())
+                using (var streamReader = new StreamReader(str))
+                using (var xr = XmlReader.Create(streamReader))
+                {
                     return new XElement(pkg + "part",
                         new XAttribute(pkg + "name", part.Uri),
                         new XAttribute(pkg + "contentType", part.ContentType),
@@ -301,17 +379,18 @@ namespace OpenXmlPowerTools
                             XElement.Load(xr)
                         )
                     );
+                }
             }
             else
             {
-                using (Stream str = part.GetStream())
-                using (BinaryReader binaryReader = new BinaryReader(str))
+                using (var str = part.GetStream())
+                using (var binaryReader = new BinaryReader(str))
                 {
-                    int len = (int)binaryReader.BaseStream.Length;
-                    byte[] byteArray = binaryReader.ReadBytes(len);
+                    var len = (int)binaryReader.BaseStream.Length;
+                    var byteArray = binaryReader.ReadBytes(len);
                     // the following expression creates the base64String, then chunks
                     // it to lines of 76 characters long
-                    string base64String = (System.Convert.ToBase64String(byteArray))
+                    var base64String = (System.Convert.ToBase64String(byteArray))
                         .Select
                         (
                             (c, i) => new FlatOpcTupple()
@@ -348,25 +427,34 @@ namespace OpenXmlPowerTools
         {
             var fi = new FileInfo(path);
             if (Util.IsWordprocessingML(fi.Extension))
+            {
                 return new XProcessingInstruction("mso-application",
                             "progid=\"Word.Document\"");
+            }
+
             if (Util.IsPresentationML(fi.Extension))
+            {
                 return new XProcessingInstruction("mso-application",
                             "progid=\"PowerPoint.Show\"");
+            }
+
             if (Util.IsSpreadsheetML(fi.Extension))
+            {
                 return new XProcessingInstruction("mso-application",
                             "progid=\"Excel.Sheet\"");
+            }
+
             return null;
         }
 
         public static XmlDocument OpcToXmlDocument(string fileName)
         {
-            using (Package package = Package.Open(fileName))
+            using (var package = Package.Open(fileName))
             {
                 XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
 
-                XDeclaration declaration = new XDeclaration("1.0", "UTF-8", "yes");
-                XDocument doc = new XDocument(
+                var declaration = new XDeclaration("1.0", "UTF-8", "yes");
+                var doc = new XDocument(
                     declaration,
                     GetProcessingInstruction(fileName),
                     new XElement(pkg + "package",
@@ -380,12 +468,12 @@ namespace OpenXmlPowerTools
 
         public static XDocument OpcToXDocument(string fileName)
         {
-            using (Package package = Package.Open(fileName))
+            using (var package = Package.Open(fileName))
             {
                 XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
 
-                XDeclaration declaration = new XDeclaration("1.0", "UTF-8", "yes");
-                XDocument doc = new XDocument(
+                var declaration = new XDeclaration("1.0", "UTF-8", "yes");
+                var doc = new XDocument(
                     declaration,
                     GetProcessingInstruction(fileName),
                     new XElement(pkg + "package",
@@ -399,12 +487,12 @@ namespace OpenXmlPowerTools
 
         public static string[] OpcToText(string fileName)
         {
-            using (Package package = Package.Open(fileName))
+            using (var package = Package.Open(fileName))
             {
                 XNamespace pkg = "http://schemas.microsoft.com/office/2006/xmlPackage";
 
-                XDeclaration declaration = new XDeclaration("1.0", "UTF-8", "yes");
-                XDocument doc = new XDocument(
+                var declaration = new XDeclaration("1.0", "UTF-8", "yes");
+                var doc = new XDocument(
                     declaration,
                     GetProcessingInstruction(fileName),
                     new XElement(pkg + "package",
@@ -418,13 +506,13 @@ namespace OpenXmlPowerTools
 
         private static XmlDocument GetXmlDocument(XDocument document)
         {
-            using (XmlReader xmlReader = document.CreateReader())
+            using (var xmlReader = document.CreateReader())
             {
-                XmlDocument xmlDoc = new XmlDocument();
+                var xmlDoc = new XmlDocument();
                 xmlDoc.Load(xmlReader);
                 if (document.Declaration != null)
                 {
-                    XmlDeclaration dec = xmlDoc.CreateXmlDeclaration(document.Declaration.Version,
+                    var dec = xmlDoc.CreateXmlDeclaration(document.Declaration.Version,
                         document.Declaration.Encoding, document.Declaration.Standalone);
                     xmlDoc.InsertBefore(dec, xmlDoc.FirstChild);
                 }
@@ -434,26 +522,32 @@ namespace OpenXmlPowerTools
 
         private static XDocument GetXDocument(this XmlDocument document)
         {
-            XDocument xDoc = new XDocument();
-            using (XmlWriter xmlWriter = xDoc.CreateWriter())
+            var xDoc = new XDocument();
+            using (var xmlWriter = xDoc.CreateWriter())
+            {
                 document.WriteTo(xmlWriter);
-            XmlDeclaration decl =
+            }
+
+            var decl =
                 document.ChildNodes.OfType<XmlDeclaration>().FirstOrDefault();
             if (decl != null)
+            {
                 xDoc.Declaration = new XDeclaration(decl.Version, decl.Encoding,
                     decl.Standalone);
+            }
+
             return xDoc;
         }
 
         public static void FlatToOpc(XmlDocument doc, string outputPath)
         {
-            XDocument xd = GetXDocument(doc);
+            var xd = GetXDocument(doc);
             FlatToOpc(xd, outputPath);
         }
 
         public static void FlatToOpc(string xmlText, string outputPath)
         {
-            XDocument xd = XDocument.Parse(xmlText);
+            var xd = XDocument.Parse(xmlText);
             FlatToOpc(xd, outputPath);
         }
 
@@ -464,7 +558,7 @@ namespace OpenXmlPowerTools
             XNamespace rel =
                 "http://schemas.openxmlformats.org/package/2006/relationships";
 
-            using (Package package = Package.Open(outputPath, FileMode.Create))
+            using (var package = Package.Open(outputPath, FileMode.Create))
             {
                 // add all parts (but not relationships)
                 foreach (var xmlPart in doc.Root
@@ -473,33 +567,35 @@ namespace OpenXmlPowerTools
                         (string)p.Attribute(pkg + "contentType") !=
                         "application/vnd.openxmlformats-package.relationships+xml"))
                 {
-                    string name = (string)xmlPart.Attribute(pkg + "name");
-                    string contentType = (string)xmlPart.Attribute(pkg + "contentType");
+                    var name = (string)xmlPart.Attribute(pkg + "name");
+                    var contentType = (string)xmlPart.Attribute(pkg + "contentType");
                     if (contentType.EndsWith("xml"))
                     {
-                        Uri u = new Uri(name, UriKind.Relative);
-                        PackagePart part = package.CreatePart(u, contentType,
+                        var u = new Uri(name, UriKind.Relative);
+                        var part = package.CreatePart(u, contentType,
                             CompressionOption.SuperFast);
-                        using (Stream str = part.GetStream(FileMode.Create))
-                        using (XmlWriter xmlWriter = XmlWriter.Create(str))
+                        using (var str = part.GetStream(FileMode.Create))
+                        using (var xmlWriter = XmlWriter.Create(str))
+                        {
                             xmlPart.Element(pkg + "xmlData")
                                 .Elements()
                                 .First()
                                 .WriteTo(xmlWriter);
+                        }
                     }
                     else
                     {
-                        Uri u = new Uri(name, UriKind.Relative);
-                        PackagePart part = package.CreatePart(u, contentType,
+                        var u = new Uri(name, UriKind.Relative);
+                        var part = package.CreatePart(u, contentType,
                             CompressionOption.SuperFast);
-                        using (Stream str = part.GetStream(FileMode.Create))
-                        using (BinaryWriter binaryWriter = new BinaryWriter(str))
+                        using (var str = part.GetStream(FileMode.Create))
+                        using (var binaryWriter = new BinaryWriter(str))
                         {
-                            string base64StringInChunks =
+                            var base64StringInChunks =
                                 (string)xmlPart.Element(pkg + "binaryData");
-                            char[] base64CharArray = base64StringInChunks
+                            var base64CharArray = base64StringInChunks
                                 .Where(c => c != '\r' && c != '\n').ToArray();
-                            byte[] byteArray =
+                            var byteArray =
                                 System.Convert.FromBase64CharArray(base64CharArray,
                                 0, base64CharArray.Length);
                             binaryWriter.Write(byteArray);
@@ -509,57 +605,65 @@ namespace OpenXmlPowerTools
 
                 foreach (var xmlPart in doc.Root.Elements())
                 {
-                    string name = (string)xmlPart.Attribute(pkg + "name");
-                    string contentType = (string)xmlPart.Attribute(pkg + "contentType");
+                    var name = (string)xmlPart.Attribute(pkg + "name");
+                    var contentType = (string)xmlPart.Attribute(pkg + "contentType");
                     if (contentType ==
                         "application/vnd.openxmlformats-package.relationships+xml")
                     {
                         // add the package level relationships
                         if (name == "/_rels/.rels")
                         {
-                            foreach (XElement xmlRel in
+                            foreach (var xmlRel in
                                 xmlPart.Descendants(rel + "Relationship"))
                             {
-                                string id = (string)xmlRel.Attribute("Id");
-                                string type = (string)xmlRel.Attribute("Type");
-                                string target = (string)xmlRel.Attribute("Target");
-                                string targetMode =
+                                var id = (string)xmlRel.Attribute("Id");
+                                var type = (string)xmlRel.Attribute("Type");
+                                var target = (string)xmlRel.Attribute("Target");
+                                var targetMode =
                                     (string)xmlRel.Attribute("TargetMode");
                                 if (targetMode == "External")
+                                {
                                     package.CreateRelationship(
                                         new Uri(target, UriKind.Absolute),
                                         TargetMode.External, type, id);
+                                }
                                 else
+                                {
                                     package.CreateRelationship(
                                         new Uri(target, UriKind.Relative),
                                         TargetMode.Internal, type, id);
+                                }
                             }
                         }
                         else
                         // add part level relationships
                         {
-                            string directory = name.Substring(0, name.IndexOf("/_rels"));
-                            string relsFilename = name.Substring(name.LastIndexOf('/'));
-                            string filename =
+                            var directory = name.Substring(0, name.IndexOf("/_rels"));
+                            var relsFilename = name.Substring(name.LastIndexOf('/'));
+                            var filename =
                                 relsFilename.Substring(0, relsFilename.IndexOf(".rels"));
-                            PackagePart fromPart = package.GetPart(
+                            var fromPart = package.GetPart(
                                 new Uri(directory + filename, UriKind.Relative));
-                            foreach (XElement xmlRel in
+                            foreach (var xmlRel in
                                 xmlPart.Descendants(rel + "Relationship"))
                             {
-                                string id = (string)xmlRel.Attribute("Id");
-                                string type = (string)xmlRel.Attribute("Type");
-                                string target = (string)xmlRel.Attribute("Target");
-                                string targetMode =
+                                var id = (string)xmlRel.Attribute("Id");
+                                var type = (string)xmlRel.Attribute("Type");
+                                var target = (string)xmlRel.Attribute("Target");
+                                var targetMode =
                                     (string)xmlRel.Attribute("TargetMode");
                                 if (targetMode == "External")
+                                {
                                     fromPart.CreateRelationship(
                                         new Uri(target, UriKind.Absolute),
                                         TargetMode.External, type, id);
+                                }
                                 else
+                                {
                                     fromPart.CreateRelationship(
                                         new Uri(target, UriKind.Relative),
                                         TargetMode.Internal, type, id);
+                                }
                             }
                         }
                     }
@@ -572,8 +676,8 @@ namespace OpenXmlPowerTools
     {
         public static string ConvertToBase64(string fileName)
         {
-            byte[] ba = System.IO.File.ReadAllBytes(fileName);
-            string base64String = (System.Convert.ToBase64String(ba))
+            var ba = System.IO.File.ReadAllBytes(fileName);
+            var base64String = (System.Convert.ToBase64String(ba))
                 .Select
                 (
                     (c, i) => new
@@ -606,8 +710,8 @@ namespace OpenXmlPowerTools
 
         public static byte[] ConvertFromBase64(string fileName, string b64)
         {
-            string b64b = b64.Replace("\r\n", "");
-            byte[] ba = System.Convert.FromBase64String(b64b);
+            var b64b = b64.Replace("\r\n", "");
+            var ba = System.Convert.FromBase64String(b64b);
             return ba;
         }
     }
@@ -629,7 +733,7 @@ namespace OpenXmlPowerTools
 
     public static class WordprocessingMLUtil
     {
-        private static HashSet<string> UnknownFonts = new HashSet<string>();
+        private static readonly HashSet<string> UnknownFonts = new HashSet<string>();
         private static HashSet<string> KnownFamilies = null;
 
         public static int CalcWidthOfRunInTwips(XElement r)
@@ -639,34 +743,56 @@ namespace OpenXmlPowerTools
                 KnownFamilies = new HashSet<string>();
                 var families = FontFamily.Families;
                 foreach (var fam in families)
+                {
                     KnownFamilies.Add(fam.Name);
+                }
             }
 
             var fontName = (string)r.Attribute(PtOpenXml.pt + "FontName");
             if (fontName == null)
+            {
                 fontName = (string)r.Ancestors(W.p).First().Attribute(PtOpenXml.pt + "FontName");
+            }
+
             if (fontName == null)
+            {
                 throw new OpenXmlPowerToolsException("Internal Error, should have FontName attribute");
+            }
+
             if (UnknownFonts.Contains(fontName))
+            {
                 return 0;
+            }
 
             var rPr = r.Element(W.rPr);
             if (rPr == null)
+            {
                 throw new OpenXmlPowerToolsException("Internal Error, should have run properties");
+            }
+
             var languageType = (string)r.Attribute(PtOpenXml.LanguageType);
             decimal? szn = null;
             if (languageType == "bidi")
+            {
                 szn = (decimal?)rPr.Elements(W.szCs).Attributes(W.val).FirstOrDefault();
+            }
             else
+            {
                 szn = (decimal?)rPr.Elements(W.sz).Attributes(W.val).FirstOrDefault();
+            }
+
             if (szn == null)
+            {
                 szn = 22m;
+            }
 
             var sz = szn.GetValueOrDefault();
 
             // unknown font families will throw ArgumentException, in which case just return 0
             if (!KnownFamilies.Contains(fontName))
+            {
                 return 0;
+            }
             // in theory, all unknown fonts are found by the above test, but if not...
             FontFamily ff;
             try
@@ -679,15 +805,23 @@ namespace OpenXmlPowerTools
 
                 return 0;
             }
-            FontStyle fs = FontStyle.Regular;
+            var fs = FontStyle.Regular;
             var bold = GetBoolProp(rPr, W.b) || GetBoolProp(rPr, W.bCs);
             var italic = GetBoolProp(rPr, W.i) || GetBoolProp(rPr, W.iCs);
             if (bold && !italic)
+            {
                 fs = FontStyle.Bold;
+            }
+
             if (italic && !bold)
+            {
                 fs = FontStyle.Italic;
+            }
+
             if (bold && italic)
+            {
                 fs = FontStyle.Bold | FontStyle.Italic;
+            }
 
             var runText = r.DescendantsTrimmed(W.txbxContent)
                 .Where(e => e.Name == W.t)
@@ -700,45 +834,73 @@ namespace OpenXmlPowerTools
                 .Sum();
 
             if (runText.Length == 0 && tabLength == 0)
+            {
                 return 0;
+            }
 
-            int multiplier = 1;
+            var multiplier = 1;
             if (runText.Length <= 2)
+            {
                 multiplier = 100;
+            }
             else if (runText.Length <= 4)
+            {
                 multiplier = 50;
+            }
             else if (runText.Length <= 8)
+            {
                 multiplier = 25;
+            }
             else if (runText.Length <= 16)
+            {
                 multiplier = 12;
+            }
             else if (runText.Length <= 32)
+            {
                 multiplier = 6;
+            }
+
             if (multiplier != 1)
             {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < multiplier; i++)
+                var sb = new StringBuilder();
+                for (var i = 0; i < multiplier; i++)
+                {
                     sb.Append(runText);
+                }
+
                 runText = sb.ToString();
             }
 
             var w = MetricsGetter.GetTextWidth(ff, fs, sz, runText);
 
-            return (int) (w / 96m * 1440m / multiplier + tabLength * 1440m);
+            return (int)(w / 96m * 1440m / multiplier + tabLength * 1440m);
         }
 
         public static bool GetBoolProp(XElement runProps, XName xName)
         {
             var p = runProps.Element(xName);
             if (p == null)
+            {
                 return false;
+            }
+
             var v = p.Attribute(W.val);
             if (v == null)
+            {
                 return true;
+            }
+
             var s = v.Value.ToLower();
             if (s == "0" || s == "false")
+            {
                 return false;
+            }
+
             if (s == "1" || s == "true")
+            {
                 return true;
+            }
+
             return false;
         }
 
@@ -758,7 +920,7 @@ namespace OpenXmlPowerTools
         {
             const string dontConsolidate = "DontConsolidate";
 
-            IEnumerable<IGrouping<string, XElement>> groupedAdjacentRunsWithIdenticalFormatting =
+            var groupedAdjacentRunsWithIdenticalFormatting =
                 runContainer
                     .Elements()
                     .GroupAdjacent(ce =>
@@ -766,16 +928,22 @@ namespace OpenXmlPowerTools
                         if (ce.Name == W.r)
                         {
                             if (ce.Elements().Count(e => e.Name != W.rPr) != 1)
+                            {
                                 return dontConsolidate;
+                            }
 
-                            XElement rPr = ce.Element(W.rPr);
-                            string rPrString = rPr != null ? rPr.ToString(SaveOptions.None) : string.Empty;
+                            var rPr = ce.Element(W.rPr);
+                            var rPrString = rPr != null ? rPr.ToString(SaveOptions.None) : string.Empty;
 
                             if (ce.Element(W.t) != null)
+                            {
                                 return "Wt" + rPrString;
+                            }
 
                             if (ce.Element(W.instrText) != null)
+                            {
                                 return "WinstrText" + rPrString;
+                            }
 
                             return dontConsolidate;
                         }
@@ -820,16 +988,18 @@ namespace OpenXmlPowerTools
                             // w:ins/w:r/w:t
                             if ((ce.Elements().Elements().Count(e => e.Name != W.rPr) != 1) ||
                                 !ce.Elements().Elements(W.t).Any())
+                            {
                                 return dontConsolidate;
+                            }
 
-                            XAttribute dateIns2 = ce.Attribute(W.date);
+                            var dateIns2 = ce.Attribute(W.date);
 
-                            string authorIns2 = (string) ce.Attribute(W.author) ?? string.Empty;
-                            string dateInsString2 = dateIns2 != null
-                                ? ((DateTime) dateIns2).ToString("s")
+                            var authorIns2 = (string)ce.Attribute(W.author) ?? string.Empty;
+                            var dateInsString2 = dateIns2 != null
+                                ? ((DateTime)dateIns2).ToString("s")
                                 : string.Empty;
 
-                            string idIns2 = (string)ce.Attribute(W.id);
+                            var idIns2 = (string)ce.Attribute(W.id);
 
                             return "Wins2" +
                                    authorIns2 +
@@ -845,12 +1015,14 @@ namespace OpenXmlPowerTools
                         {
                             if ((ce.Elements(W.r).Elements().Count(e => e.Name != W.rPr) != 1) ||
                                 !ce.Elements().Elements(W.delText).Any())
+                            {
                                 return dontConsolidate;
+                            }
 
-                            XAttribute dateDel2 = ce.Attribute(W.date);
+                            var dateDel2 = ce.Attribute(W.date);
 
-                            string authorDel2 = (string) ce.Attribute(W.author) ?? string.Empty;
-                            string dateDelString2 = dateDel2 != null ? ((DateTime) dateDel2).ToString("s") : string.Empty;
+                            var authorDel2 = (string)ce.Attribute(W.author) ?? string.Empty;
+                            var dateDelString2 = dateDel2 != null ? ((DateTime)dateDel2).ToString("s") : string.Empty;
 
                             return "Wdel" +
                                    authorDel2 +
@@ -869,22 +1041,24 @@ namespace OpenXmlPowerTools
                 groupedAdjacentRunsWithIdenticalFormatting.Select(g =>
                 {
                     if (g.Key == dontConsolidate)
-                        return (object) g;
+                    {
+                        return (object)g;
+                    }
 
-                    string textValue = g
+                    var textValue = g
                         .Select(r =>
                             r.Descendants()
                                 .Where(d => (d.Name == W.t) || (d.Name == W.delText) || (d.Name == W.instrText))
                                 .Select(d => d.Value)
                                 .StringConcatenate())
                         .StringConcatenate();
-                    XAttribute xs = XmlUtil.GetXmlSpaceAttribute(textValue);
+                    var xs = XmlUtil.GetXmlSpaceAttribute(textValue);
 
                     if (g.First().Name == W.r)
                     {
                         if (g.First().Element(W.t) != null)
                         {
-                            IEnumerable<IEnumerable<XAttribute>> statusAtt =
+                            var statusAtt =
                                 g.Select(r => r.Descendants(W.t).Take(1).Attributes(PtOpenXml.Status));
                             return new XElement(W.r,
                                 g.First().Elements(W.rPr),
@@ -892,9 +1066,11 @@ namespace OpenXmlPowerTools
                         }
 
                         if (g.First().Element(W.instrText) != null)
+                        {
                             return new XElement(W.r,
                                 g.First().Elements(W.rPr),
                                 new XElement(W.instrText, xs, textValue));
+                        }
                     }
 
                     if (g.First().Name == W.ins)
@@ -917,135 +1093,139 @@ namespace OpenXmlPowerTools
                     }
 
                     if (g.First().Name == W.del)
+                    {
                         return new XElement(W.del,
                             g.First().Attributes(),
                             new XElement(W.r,
                                 g.First().Elements(W.r).Elements(W.rPr),
                                 new XElement(W.delText, xs, textValue)));
+                    }
 
                     return g;
                 }));
 
             // Process w:txbxContent//w:p
-            foreach (XElement txbx in runContainerWithConsolidatedRuns.Descendants(W.txbxContent))
-                foreach (XElement txbxPara in txbx.DescendantsTrimmed(W.txbxContent).Where(d => d.Name == W.p))
+            foreach (var txbx in runContainerWithConsolidatedRuns.Descendants(W.txbxContent))
+            {
+                foreach (var txbxPara in txbx.DescendantsTrimmed(W.txbxContent).Where(d => d.Name == W.p))
                 {
-                    XElement newPara = CoalesceAdjacentRunsWithIdenticalFormatting(txbxPara);
+                    var newPara = CoalesceAdjacentRunsWithIdenticalFormatting(txbxPara);
                     txbxPara.ReplaceWith(newPara);
                 }
+            }
 
             // Process additional run containers.
-            List<XElement> runContainers = runContainerWithConsolidatedRuns
+            var runContainers = runContainerWithConsolidatedRuns
                 .Descendants()
                 .Where(d => AdditionalRunContainerNames.Contains(d.Name))
                 .ToList();
-            foreach (XElement container in runContainers)
+            foreach (var container in runContainers)
             {
-                XElement newContainer = CoalesceAdjacentRunsWithIdenticalFormatting(container);
+                var newContainer = CoalesceAdjacentRunsWithIdenticalFormatting(container);
                 container.ReplaceWith(newContainer);
             }
 
             return runContainerWithConsolidatedRuns;
         }
 
-        private static Dictionary<XName, int> Order_settings = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_settings = new Dictionary<XName, int>
         {
-            { W.writeProtection, 10}, 
-            { W.view, 20}, 
-            { W.zoom, 30}, 
-            { W.removePersonalInformation, 40}, 
-            { W.removeDateAndTime, 50}, 
-            { W.doNotDisplayPageBoundaries, 60}, 
-            { W.displayBackgroundShape, 70}, 
-            { W.printPostScriptOverText, 80}, 
-            { W.printFractionalCharacterWidth, 90}, 
-            { W.printFormsData, 100}, 
-            { W.embedTrueTypeFonts, 110}, 
-            { W.embedSystemFonts, 120}, 
-            { W.saveSubsetFonts, 130}, 
-            { W.saveFormsData, 140}, 
-            { W.mirrorMargins, 150}, 
-            { W.alignBordersAndEdges, 160}, 
-            { W.bordersDoNotSurroundHeader, 170}, 
-            { W.bordersDoNotSurroundFooter, 180}, 
-            { W.gutterAtTop, 190}, 
-            { W.hideSpellingErrors, 200}, 
-            { W.hideGrammaticalErrors, 210}, 
-            { W.activeWritingStyle, 220}, 
-            { W.proofState, 230}, 
-            { W.formsDesign, 240}, 
-            { W.attachedTemplate, 250}, 
-            { W.linkStyles, 260}, 
-            { W.stylePaneFormatFilter, 270}, 
-            { W.stylePaneSortMethod, 280}, 
-            { W.documentType, 290}, 
-            { W.mailMerge, 300}, 
-            { W.revisionView, 310}, 
-            { W.trackRevisions, 320}, 
-            { W.doNotTrackMoves, 330}, 
-            { W.doNotTrackFormatting, 340}, 
-            { W.documentProtection, 350}, 
-            { W.autoFormatOverride, 360}, 
-            { W.styleLockTheme, 370}, 
-            { W.styleLockQFSet, 380}, 
-            { W.defaultTabStop, 390}, 
-            { W.autoHyphenation, 400}, 
-            { W.consecutiveHyphenLimit, 410}, 
-            { W.hyphenationZone, 420}, 
-            { W.doNotHyphenateCaps, 430}, 
-            { W.showEnvelope, 440}, 
-            { W.summaryLength, 450}, 
-            { W.clickAndTypeStyle, 460}, 
-            { W.defaultTableStyle, 470}, 
-            { W.evenAndOddHeaders, 480}, 
-            { W.bookFoldRevPrinting, 490}, 
-            { W.bookFoldPrinting, 500}, 
-            { W.bookFoldPrintingSheets, 510}, 
-            { W.drawingGridHorizontalSpacing, 520}, 
-            { W.drawingGridVerticalSpacing, 530}, 
-            { W.displayHorizontalDrawingGridEvery, 540}, 
-            { W.displayVerticalDrawingGridEvery, 550}, 
-            { W.doNotUseMarginsForDrawingGridOrigin, 560}, 
-            { W.drawingGridHorizontalOrigin, 570}, 
-            { W.drawingGridVerticalOrigin, 580}, 
-            { W.doNotShadeFormData, 590}, 
-            { W.noPunctuationKerning, 600}, 
-            { W.characterSpacingControl, 610}, 
-            { W.printTwoOnOne, 620}, 
-            { W.strictFirstAndLastChars, 630}, 
-            { W.noLineBreaksAfter, 640}, 
-            { W.noLineBreaksBefore, 650}, 
-            { W.savePreviewPicture, 660}, 
-            { W.doNotValidateAgainstSchema, 670}, 
-            { W.saveInvalidXml, 680}, 
-            { W.ignoreMixedContent, 690}, 
-            { W.alwaysShowPlaceholderText, 700}, 
-            { W.doNotDemarcateInvalidXml, 710}, 
-            { W.saveXmlDataOnly, 720}, 
-            { W.useXSLTWhenSaving, 730}, 
-            { W.saveThroughXslt, 740}, 
-            { W.showXMLTags, 750}, 
-            { W.alwaysMergeEmptyNamespace, 760}, 
-            { W.updateFields, 770}, 
-            { W.footnotePr, 780}, 
-            { W.endnotePr, 790}, 
-            { W.compat, 800}, 
-            { W.docVars, 810}, 
-            { W.rsids, 820}, 
-            { M.mathPr, 830}, 
-            { W.attachedSchema, 840}, 
-            { W.themeFontLang, 850}, 
-            { W.clrSchemeMapping, 860}, 
-            { W.doNotIncludeSubdocsInStats, 870}, 
-            { W.doNotAutoCompressPictures, 880}, 
+            { W.writeProtection, 10},
+            { W.view, 20},
+            { W.zoom, 30},
+            { W.removePersonalInformation, 40},
+            { W.removeDateAndTime, 50},
+            { W.doNotDisplayPageBoundaries, 60},
+            { W.displayBackgroundShape, 70},
+            { W.printPostScriptOverText, 80},
+            { W.printFractionalCharacterWidth, 90},
+            { W.printFormsData, 100},
+            { W.embedTrueTypeFonts, 110},
+            { W.embedSystemFonts, 120},
+            { W.saveSubsetFonts, 130},
+            { W.saveFormsData, 140},
+            { W.mirrorMargins, 150},
+            { W.alignBordersAndEdges, 160},
+            { W.bordersDoNotSurroundHeader, 170},
+            { W.bordersDoNotSurroundFooter, 180},
+            { W.gutterAtTop, 190},
+            { W.hideSpellingErrors, 200},
+            { W.hideGrammaticalErrors, 210},
+            { W.activeWritingStyle, 220},
+            { W.proofState, 230},
+            { W.formsDesign, 240},
+            { W.attachedTemplate, 250},
+            { W.linkStyles, 260},
+            { W.stylePaneFormatFilter, 270},
+            { W.stylePaneSortMethod, 280},
+            { W.documentType, 290},
+            { W.mailMerge, 300},
+            { W.revisionView, 310},
+            { W.trackRevisions, 320},
+            { W.doNotTrackMoves, 330},
+            { W.doNotTrackFormatting, 340},
+            { W.documentProtection, 350},
+            { W.autoFormatOverride, 360},
+            { W.styleLockTheme, 370},
+            { W.styleLockQFSet, 380},
+            { W.defaultTabStop, 390},
+            { W.autoHyphenation, 400},
+            { W.consecutiveHyphenLimit, 410},
+            { W.hyphenationZone, 420},
+            { W.doNotHyphenateCaps, 430},
+            { W.showEnvelope, 440},
+            { W.summaryLength, 450},
+            { W.clickAndTypeStyle, 460},
+            { W.defaultTableStyle, 470},
+            { W.evenAndOddHeaders, 480},
+            { W.bookFoldRevPrinting, 490},
+            { W.bookFoldPrinting, 500},
+            { W.bookFoldPrintingSheets, 510},
+            { W.drawingGridHorizontalSpacing, 520},
+            { W.drawingGridVerticalSpacing, 530},
+            { W.displayHorizontalDrawingGridEvery, 540},
+            { W.displayVerticalDrawingGridEvery, 550},
+            { W.doNotUseMarginsForDrawingGridOrigin, 560},
+            { W.drawingGridHorizontalOrigin, 570},
+            { W.drawingGridVerticalOrigin, 580},
+            { W.doNotShadeFormData, 590},
+            { W.noPunctuationKerning, 600},
+            { W.characterSpacingControl, 610},
+            { W.printTwoOnOne, 620},
+            { W.strictFirstAndLastChars, 630},
+            { W.noLineBreaksAfter, 640},
+            { W.noLineBreaksBefore, 650},
+            { W.savePreviewPicture, 660},
+            { W.doNotValidateAgainstSchema, 670},
+            { W.saveInvalidXml, 680},
+            { W.ignoreMixedContent, 690},
+            { W.alwaysShowPlaceholderText, 700},
+            { W.doNotDemarcateInvalidXml, 710},
+            { W.saveXmlDataOnly, 720},
+            { W.useXSLTWhenSaving, 730},
+            { W.saveThroughXslt, 740},
+            { W.showXMLTags, 750},
+            { W.alwaysMergeEmptyNamespace, 760},
+            { W.updateFields, 770},
+            { W.footnotePr, 780},
+            { W.endnotePr, 790},
+            { W.compat, 800},
+            { W.docVars, 810},
+            { W.rsids, 820},
+            { M.mathPr, 830},
+            { W.attachedSchema, 840},
+            { W.themeFontLang, 850},
+            { W.clrSchemeMapping, 860},
+            { W.doNotIncludeSubdocsInStats, 870},
+            { W.doNotAutoCompressPictures, 880},
             { W.forceUpgrade, 890}, 
             //{W.captions, 900}, 
-            { W.readModeInkLockDown, 910}, 
+            { W.readModeInkLockDown, 910},
             { W.smartTagType, 920}, 
             //{W.sl:schemaLibrary, 930}, 
-            { W.doNotEmbedSmartTags, 940}, 
-            { W.decimalSymbol, 950}, 
-            { W.listSeparator, 960}, 
+            { W.doNotEmbedSmartTags, 940},
+            { W.decimalSymbol, 950},
+            { W.listSeparator, 960},
         };
 
 #if false
@@ -1149,7 +1329,7 @@ decimalSymbol
 listSeparator
 #endif
 
-        private static Dictionary<XName, int> Order_pPr = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_pPr = new Dictionary<XName, int>
         {
             { W.pStyle, 10 },
             { W.keepNext, 20 },
@@ -1189,7 +1369,7 @@ listSeparator
             { W.pPrChange, 370 },
         };
 
-        private static Dictionary<XName, int> Order_rPr = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_rPr = new Dictionary<XName, int>
         {
             { W.moveFrom, 5 },
             { W.moveTo, 7 },
@@ -1241,7 +1421,7 @@ listSeparator
             { W.oMath, 460 },
         };
 
-        private static Dictionary<XName, int> Order_tblPr = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_tblPr = new Dictionary<XName, int>
         {
             { W.tblStyle, 10 },
             { W.tblpPr, 20 },
@@ -1262,7 +1442,7 @@ listSeparator
             { W.tblDescription, 170 },
         };
 
-        private static Dictionary<XName, int> Order_tblBorders = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_tblBorders = new Dictionary<XName, int>
         {
             { W.top, 10 },
             { W.left, 20 },
@@ -1274,7 +1454,7 @@ listSeparator
             { W.insideV, 80 },
         };
 
-        private static Dictionary<XName, int> Order_tcPr = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_tcPr = new Dictionary<XName, int>
         {
             { W.cnfStyle, 10 },
             { W.tcW, 20 },
@@ -1292,7 +1472,7 @@ listSeparator
             { W.headers, 140 },
         };
 
-        private static Dictionary<XName, int> Order_tcBorders = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_tcBorders = new Dictionary<XName, int>
         {
             { W.top, 10 },
             { W.start, 20 },
@@ -1306,7 +1486,7 @@ listSeparator
             { W.tr2bl, 100 },
         };
 
-        private static Dictionary<XName, int> Order_pBdr = new Dictionary<XName, int>
+        private static readonly Dictionary<XName, int> Order_pBdr = new Dictionary<XName, int>
         {
             { W.top, 10 },
             { W.left, 20 },
@@ -1318,78 +1498,113 @@ listSeparator
 
         public static object WmlOrderElementsPerStandard(XNode node)
         {
-            XElement element = node as XElement;
+            var element = node as XElement;
             if (element != null)
             {
                 if (element.Name == W.pPr)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_pPr.ContainsKey(e.Name))
+                            {
                                 return Order_pPr[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.rPr)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_rPr.ContainsKey(e.Name))
+                            {
                                 return Order_rPr[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.tblPr)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_tblPr.ContainsKey(e.Name))
+                            {
                                 return Order_tblPr[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.tcPr)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_tcPr.ContainsKey(e.Name))
+                            {
                                 return Order_tcPr[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.tcBorders)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_tcBorders.ContainsKey(e.Name))
+                            {
                                 return Order_tcBorders[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.tblBorders)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_tblBorders.ContainsKey(e.Name))
+                            {
                                 return Order_tblBorders[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.pBdr)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_pBdr.ContainsKey(e.Name))
+                            {
                                 return Order_pBdr[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 if (element.Name == W.p)
                 {
@@ -1401,20 +1616,27 @@ listSeparator
                 }
 
                 if (element.Name == W.r)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements(W.rPr).Select(e => (XElement)WmlOrderElementsPerStandard(e)),
                         element.Elements().Where(e => e.Name != W.rPr).Select(e => (XElement)WmlOrderElementsPerStandard(e)));
+                }
 
                 if (element.Name == W.settings)
+                {
                     return new XElement(element.Name,
                         element.Attributes(),
                         element.Elements().Select(e => (XElement)WmlOrderElementsPerStandard(e)).OrderBy(e =>
                         {
                             if (Order_settings.ContainsKey(e.Name))
+                            {
                                 return Order_settings[e.Name];
+                            }
+
                             return 999;
                         }));
+                }
 
                 return new XElement(element.Name,
                     element.Attributes(),
@@ -1425,10 +1647,10 @@ listSeparator
 
         public static WmlDocument BreakLinkToTemplate(WmlDocument source)
         {
-            using (MemoryStream ms = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 ms.Write(source.DocumentByteArray, 0, source.DocumentByteArray.Length);
-                using (WordprocessingDocument wDoc = WordprocessingDocument.Open(ms, true))
+                using (var wDoc = WordprocessingDocument.Open(ms, true))
                 {
                     var efpp = wDoc.ExtendedFilePropertiesPart;
                     if (efpp != null)
@@ -1436,7 +1658,10 @@ listSeparator
                         var xd = efpp.GetXDocument();
                         var template = xd.Descendants(EP.Template).FirstOrDefault();
                         if (template != null)
+                        {
                             template.Value = "";
+                        }
+
                         efpp.PutXDocument();
                     }
                 }
@@ -1464,7 +1689,7 @@ listSeparator
                     part.ContentType == "application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml" ||
                     part.ContentType == "application/vnd.ms-office.drawingml.diagramDrawing+xml")
                 {
-                    XDocument xd = part.GetXDocument();
+                    var xd = part.GetXDocument();
                     xd.Descendants().Attributes("smtClean").Remove();
                     xd.Descendants().Attributes("smtId").Remove();
                     part.PutXDocument();
@@ -1479,16 +1704,20 @@ listSeparator
                         {
                             //string input = @"    <![if gte mso 9]><v:imagedata o:relid=""rId15""";
                             var input = sr.ReadToEnd();
-                            string pattern = @"<!\[(?<test>.*)\]>";
+                            var pattern = @"<!\[(?<test>.*)\]>";
                             //string replacement = "<![CDATA[${test}]]>";
                             //fixedContent = Regex.Replace(input, pattern, replacement, RegexOptions.Multiline);
                             fixedContent = Regex.Replace(input, pattern, m =>
                             {
                                 var g = m.Groups[1].Value;
                                 if (g.StartsWith("CDATA["))
+                                {
                                     return "<![" + g + "]>";
+                                }
                                 else
+                                {
                                     return "<![CDATA[" + g + "]]>";
+                                }
                             },
                             RegexOptions.Multiline);
 
@@ -1507,7 +1736,9 @@ listSeparator
                         }
                     }
                     using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(fixedContent)))
+                    {
                         part.FeedData(ms);
+                    }
                 }
             }
         }
@@ -1517,46 +1748,55 @@ listSeparator
     {
         public static string GetCellType(string value)
         {
-            if (value.Any(c => !Char.IsDigit(c) && c != '.'))
+            if (value.Any(c => !char.IsDigit(c) && c != '.'))
+            {
                 return "str";
+            }
+
             return null;
         }
 
         public static string IntToColumnId(int i)
         {
             if (i >= 0 && i <= 25)
-                return ((char)(((int)'A') + i)).ToString();
+            {
+                return ((char)('A' + i)).ToString();
+            }
+
             if (i >= 26 && i <= 701)
             {
-                int v = i - 26;
-                int h = v / 26;
-                int l = v % 26;
-                return ((char)(((int)'A') + h)).ToString() + ((char)(((int)'A') + l)).ToString();
+                var v = i - 26;
+                var h = v / 26;
+                var l = v % 26;
+                return ((char)('A' + h)).ToString() + ((char)('A' + l)).ToString();
             }
             // 17576
             if (i >= 702 && i <= 18277)
             {
-                int v = i - 702;
-                int h = v / 676;
-                int r = v % 676;
-                int m = r / 26;
-                int l = r % 26;
-                return ((char)(((int)'A') + h)).ToString() +
-                    ((char)(((int)'A') + m)).ToString() +
-                    ((char)(((int)'A') + l)).ToString();
+                var v = i - 702;
+                var h = v / 676;
+                var r = v % 676;
+                var m = r / 26;
+                var l = r % 26;
+                return ((char)('A' + h)).ToString() +
+                    ((char)('A' + m)).ToString() +
+                    ((char)('A' + l)).ToString();
             }
             throw new ColumnReferenceOutOfRange(i.ToString());
         }
 
         private static int CharToInt(char c)
         {
-            return (int)c - (int)'A';
+            return c - 'A';
         }
 
         public static int ColumnIdToInt(string cid)
         {
             if (cid.Length == 1)
+            {
                 return CharToInt(cid[0]);
+            }
+
             if (cid.Length == 2)
             {
                 return CharToInt(cid[0]) * 26 + CharToInt(cid[1]) + 26;
@@ -1571,20 +1811,34 @@ listSeparator
 
         public static IEnumerable<string> ColumnIDs()
         {
-            for (var c = (int)'A'; c <= (int)'Z'; ++c)
+            for (var c = (int)'A'; c <= 'Z'; ++c)
+            {
                 yield return ((char)c).ToString();
-            for (var c1 = (int)'A'; c1 <= (int)'Z'; ++c1)
-                for (var c2 = (int)'A'; c2 <= (int)'Z'; ++c2)
+            }
+
+            for (var c1 = (int)'A'; c1 <= 'Z'; ++c1)
+            {
+                for (var c2 = (int)'A'; c2 <= 'Z'; ++c2)
+                {
                     yield return ((char)c1).ToString() + ((char)c2).ToString();
-            for (var d1 = (int)'A'; d1 <= (int)'Z'; ++d1)
-                for (var d2 = (int)'A'; d2 <= (int)'Z'; ++d2)
-                    for (var d3 = (int)'A'; d3 <= (int)'Z'; ++d3)
+                }
+            }
+
+            for (var d1 = (int)'A'; d1 <= 'Z'; ++d1)
+            {
+                for (var d2 = (int)'A'; d2 <= 'Z'; ++d2)
+                {
+                    for (var d3 = (int)'A'; d3 <= 'Z'; ++d3)
+                    {
                         yield return ((char)d1).ToString() + ((char)d2).ToString() + ((char)d3).ToString();
+                    }
+                }
+            }
         }
 
         public static string ColumnIdOf(string cellReference)
         {
-            string columnIdOf = cellReference.Split('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').First();
+            var columnIdOf = cellReference.Split('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').First();
             return columnIdOf;
         }
     }
@@ -1633,29 +1887,50 @@ listSeparator
 
         public static bool? GetBoolProp(XElement rPr, XName propertyName)
         {
-            XElement propAtt = rPr.Element(propertyName);
+            var propAtt = rPr.Element(propertyName);
             if (propAtt == null)
+            {
                 return null;
+            }
 
-            XAttribute val = propAtt.Attribute(W.val);
+            var val = propAtt.Attribute(W.val);
             if (val == null)
+            {
                 return true;
+            }
 
-            string s = ((string) val).ToLower();
+            var s = ((string)val).ToLower();
             if (s == "1")
+            {
                 return true;
-            if (s == "0")
-                return false;
-            if (s == "true")
-                return true;
-            if (s == "false")
-                return false;
-            if (s == "on")
-                return true;
-            if (s == "off")
-                return false;
+            }
 
-            return (bool) propAtt.Attribute(W.val);
+            if (s == "0")
+            {
+                return false;
+            }
+
+            if (s == "true")
+            {
+                return true;
+            }
+
+            if (s == "false")
+            {
+                return false;
+            }
+
+            if (s == "on")
+            {
+                return true;
+            }
+
+            if (s == "off")
+            {
+                return false;
+            }
+
+            return (bool)propAtt.Attribute(W.val);
         }
     }
 
@@ -1680,13 +1955,13 @@ listSeparator
 
         private static string[] GetTokens(string field)
         {
-            State state = State.InWhiteSpace;
-            int tokenStart = 0;
-            char quoteStart = char.MinValue;
-            List<string> tokens = new List<string>();
-            for (int c = 0; c < field.Length; c++)
+            var state = State.InWhiteSpace;
+            var tokenStart = 0;
+            var quoteStart = char.MinValue;
+            var tokens = new List<string>();
+            for (var c = 0; c < field.Length; c++)
             {
-                if (Char.IsWhiteSpace(field[c]))
+                if (char.IsWhiteSpace(field[c]))
                 {
                     if (state == State.InToken)
                     {
@@ -1700,7 +1975,10 @@ listSeparator
                         state = State.InQuotedToken;
                     }
                     if (state == State.OnClosingQuote)
+                    {
                         state = State.InWhiteSpace;
+                    }
+
                     continue;
                 }
                 if (field[c] == '\\')
@@ -1770,13 +2048,16 @@ listSeparator
                 }
             }
             if (state == State.InToken)
+            {
                 tokens.Add(field.Substring(tokenStart, field.Length - tokenStart));
+            }
+
             return tokens.ToArray();
         }
 
         public static FieldInfo ParseField(string field)
         {
-            FieldInfo emptyField = new FieldInfo
+            var emptyField = new FieldInfo
             {
                 FieldType = "",
                 Arguments = new string[] { },
@@ -1784,14 +2065,23 @@ listSeparator
             };
 
             if (field.Length == 0)
+            {
                 return emptyField;
-            string fieldType = field.TrimStart().Split(' ').FirstOrDefault();
+            }
+
+            var fieldType = field.TrimStart().Split(' ').FirstOrDefault();
             if (fieldType == null || fieldType.ToUpper() != "HYPERLINK" || fieldType.ToUpper() != "REF")
+            {
                 return emptyField;
-            string[] tokens = GetTokens(field);
+            }
+
+            var tokens = GetTokens(field);
             if (tokens.Length == 0)
+            {
                 return emptyField;
-            FieldInfo fieldInfo = new FieldInfo()
+            }
+
+            var fieldInfo = new FieldInfo()
             {
                 FieldType = tokens[0],
                 Switches = tokens.Where(t => t[0] == '\\').ToArray(),
@@ -1801,7 +2091,7 @@ listSeparator
         }
     }
 
-    class ContentPartRelTypeIdTuple
+    internal class ContentPartRelTypeIdTuple
     {
         public OpenXmlPart ContentPart { get; set; }
         public string RelationshipType { get; set; }
@@ -1809,7 +2099,7 @@ listSeparator
     }
 
     // This class is used to prevent duplication of images
-    class ImageData
+    internal class ImageData
     {
         private string ContentType { get; set; }
         private byte[] Image { get; set; }
@@ -1819,7 +2109,7 @@ listSeparator
         public ImageData(ImagePart part)
         {
             ContentType = part.ContentType;
-            using (Stream s = part.GetStream(FileMode.Open, FileAccess.Read))
+            using (var s = part.GetStream(FileMode.Open, FileAccess.Read))
             {
                 Image = new byte[s.Length];
                 s.Read(Image, 0, (int)s.Length);
@@ -1839,29 +2129,41 @@ listSeparator
 
         public void WriteImage(ImagePart part)
         {
-            using (Stream s = part.GetStream(FileMode.Create, FileAccess.ReadWrite))
+            using (var s = part.GetStream(FileMode.Create, FileAccess.ReadWrite))
+            {
                 s.Write(Image, 0, Image.GetUpperBound(0) + 1);
+            }
         }
 
         public bool Compare(ImageData arg)
         {
             if (ContentType != arg.ContentType)
+            {
                 return false;
+            }
+
             if (Image.GetLongLength(0) != arg.Image.GetLongLength(0))
+            {
                 return false;
+            }
             // Compare the arrays byte by byte
-            long length = Image.GetLongLength(0);
-            byte[] image1 = Image;
-            byte[] image2 = arg.Image;
+            var length = Image.GetLongLength(0);
+            var image1 = Image;
+            var image2 = arg.Image;
             for (long n = 0; n < length; n++)
+            {
                 if (image1[n] != image2[n])
+                {
                     return false;
+                }
+            }
+
             return true;
         }
     }
 
     // This class is used to prevent duplication of media
-    class MediaData
+    internal class MediaData
     {
         private string ContentType { get; set; }
         private byte[] Media { get; set; }
@@ -1871,7 +2173,7 @@ listSeparator
         public MediaData(DataPart part)
         {
             ContentType = part.ContentType;
-            using (Stream s = part.GetStream(FileMode.Open, FileAccess.Read))
+            using (var s = part.GetStream(FileMode.Open, FileAccess.Read))
             {
                 Media = new byte[s.Length];
                 s.Read(Media, 0, (int)s.Length);
@@ -1891,23 +2193,35 @@ listSeparator
 
         public void WriteMedia(DataPart part)
         {
-            using (Stream s = part.GetStream(FileMode.Create, FileAccess.ReadWrite))
+            using (var s = part.GetStream(FileMode.Create, FileAccess.ReadWrite))
+            {
                 s.Write(Media, 0, Media.GetUpperBound(0) + 1);
+            }
         }
 
         public bool Compare(MediaData arg)
         {
             if (ContentType != arg.ContentType)
+            {
                 return false;
+            }
+
             if (Media.GetLongLength(0) != arg.Media.GetLongLength(0))
+            {
                 return false;
+            }
             // Compare the arrays byte by byte
-            long length = Media.GetLongLength(0);
-            byte[] media1 = Media;
-            byte[] media2 = arg.Media;
+            var length = Media.GetLongLength(0);
+            var media1 = Media;
+            var media2 = arg.Media;
             for (long n = 0; n < length; n++)
+            {
                 if (media1[n] != media2[n])
+                {
                     return false;
+                }
+            }
+
             return true;
         }
     }
@@ -1918,13 +2232,16 @@ listSeparator
         public static void FixInvalidUri(Stream fs, Func<string, Uri> invalidUriHandler)
         {
             XNamespace relNs = "http://schemas.openxmlformats.org/package/2006/relationships";
-            using (ZipArchive za = new ZipArchive(fs, ZipArchiveMode.Update))
+            using (var za = new ZipArchive(fs, ZipArchiveMode.Update))
             {
                 foreach (var entry in za.Entries.ToList())
                 {
                     if (!entry.Name.EndsWith(".rels"))
+                    {
                         continue;
-                    bool replaceEntry = false;
+                    }
+
+                    var replaceEntry = false;
                     XDocument entryXDoc = null;
                     using (var entryStream = entry.Open())
                     {
@@ -1943,11 +2260,11 @@ listSeparator
                                     {
                                         try
                                         {
-                                            Uri uri = new Uri(target);
+                                            var uri = new Uri(target);
                                         }
                                         catch (UriFormatException)
                                         {
-                                            Uri newUri = invalidUriHandler(target);
+                                            var newUri = invalidUriHandler(target);
                                             rel.Attribute("Target").Value = newUri.ToString();
                                             replaceEntry = true;
                                         }
@@ -1965,8 +2282,8 @@ listSeparator
                         var fullName = entry.FullName;
                         entry.Delete();
                         var newEntry = za.CreateEntry(fullName);
-                        using (StreamWriter writer = new StreamWriter(newEntry.Open()))
-                        using (XmlWriter xmlWriter = XmlWriter.Create(writer))
+                        using (var writer = new StreamWriter(newEntry.Open()))
+                        using (var xmlWriter = XmlWriter.Create(writer))
                         {
                             entryXDoc.WriteTo(xmlWriter);
                         }
