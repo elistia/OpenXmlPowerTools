@@ -681,8 +681,7 @@ namespace OpenXmlPowerTools
             {
                 var parent = element
                     .Ancestors()
-                    .Where(a => a.Name != W.sdtContent && a.Name != W.sdt && a.Name != W.smartTag)
-                    .FirstOrDefault();
+                    .FirstOrDefault(a => a.Name != W.sdtContent && a.Name != W.sdt && a.Name != W.smartTag);
 
                 ////////////////////////////////////////////////////////////////////////////////////
                 // Deleted run
@@ -783,7 +782,6 @@ namespace OpenXmlPowerTools
                 if (element.Name == W.ins &&
                     parent.Name == W.p)
                 {
-                    var newRri = new ReverseRevisionsInfo() { InInsert = true };
                     return new XElement(W.del,
                         element.Nodes().Select(n => ReverseRevisionsTransform(n, rri)));
                 }
@@ -1428,7 +1426,6 @@ namespace OpenXmlPowerTools
         {
             var rElement = element;
             rElement = (XElement)RemoveRsidTransform(rElement);
-            var containsMoveFromMoveTo = rElement.Descendants(W.moveFrom).Any();
             rElement = (XElement)AcceptMoveFromMoveToTransform(rElement);
             rElement = (XElement)AcceptAllOtherRevisionsTransform(rElement);
             rElement.Descendants().Attributes().Where(a => a.Name == PT.UniqueId || a.Name == PT.RunIds).Remove();
@@ -1476,9 +1473,6 @@ namespace OpenXmlPowerTools
                     var grouped = zipped.GroupAdjacent(z => z.Key).ToArray();
 
                     var gLen = grouped.Length;
-
-                    //if (gLen != 1)
-                    //    Console.WriteLine();
 
                     var newParaContents = grouped
                         .Select((g, i) =>
@@ -1552,7 +1546,7 @@ namespace OpenXmlPowerTools
             var element = node as XElement;
             if (element != null)
             {
-                if (element.Name == W.tc && !element.Elements().Where(e => e.Name != W.tcPr).Any())
+                if (element.Name == W.tc && !element.Elements().Any(e => e.Name != W.tcPr))
                 {
                     return new XElement(W.tc,
                         element.Attributes(),
@@ -1641,8 +1635,6 @@ namespace OpenXmlPowerTools
 
         private static XElement AcceptMoveFromRanges(XElement document)
         {
-            var wordProcessingNamespacePrefix = document.GetPrefixOfNamespace(W.w);
-
             // The following lists contain the elements that are between start/end elements.
             var startElementTagsInMoveFromRange = new List<XElement>();
             var endElementTagsInMoveFromRange = new List<XElement>();
@@ -1713,7 +1705,7 @@ namespace OpenXmlPowerTools
             var moveFromElementsToDelete = startElementTagsInMoveFromRange
                 .Intersect(endElementTagsInMoveFromRange)
                 .ToArray();
-            if (moveFromElementsToDelete.Count() > 0)
+            if (moveFromElementsToDelete.Any())
             {
                 return (XElement)AcceptMoveFromRangesTransform(
                     document, moveFromElementsToDelete);
@@ -1751,8 +1743,7 @@ namespace OpenXmlPowerTools
                                 }
                             }
                             var previousContentElement = c.ContentElementsBeforeSelf()
-                                .Where(e => e.GetParagraphInfo().ThisBlockContentElement != null)
-                                .FirstOrDefault();
+                                .FirstOrDefault(e => e.GetParagraphInfo().ThisBlockContentElement != null);
                             if (previousContentElement != null)
                             {
                                 var pi2 = previousContentElement.GetParagraphInfo();
@@ -1769,7 +1760,7 @@ namespace OpenXmlPowerTools
 
                     // If there is only one group, and it's key is MoveFromCollectionType.Other
                     // then there is nothing to do.
-                    if (groupedBodyChildren.Count() == 1 &&
+                    if (groupedBodyChildren.Count == 1 &&
                         groupedBodyChildren.First().Key == MoveFromCollectionType.Other)
                     {
                         var newElement = new XElement(element.Name,
@@ -1811,8 +1802,8 @@ namespace OpenXmlPowerTools
             var element = node as XElement;
             if (element != null)
             {
-                /// Accept inserted text, inserted paragraph marks, etc.
-                /// Collapse all w:ins elements.
+                // Accept inserted text, inserted paragraph marks, etc.
+                // Collapse all w:ins elements.
 
                 if (element.Name == W.ins)
                 {
@@ -1821,12 +1812,12 @@ namespace OpenXmlPowerTools
                         .Select(n => AcceptAllOtherRevisionsTransform(n));
                 }
 
-                /// Remove all of the following elements.  These elements are processed in:
-                ///   AcceptDeletedAndMovedFromContentControls
-                ///   AcceptMoveFromMoveToTransform
-                ///   AcceptDeletedAndMoveFromParagraphMarksTransform
-                ///   AcceptParagraphEndTagsInMoveFromTransform
-                ///   AcceptMoveFromRanges
+                // Remove all of the following elements.  These elements are processed in:
+                //   AcceptDeletedAndMovedFromContentControls
+                //   AcceptMoveFromMoveToTransform
+                //   AcceptDeletedAndMoveFromParagraphMarksTransform
+                //   AcceptParagraphEndTagsInMoveFromTransform
+                //   AcceptMoveFromRanges
 
                 if (element.Name == W.customXmlDelRangeStart ||
                     element.Name == W.customXmlDelRangeEnd ||
@@ -1844,18 +1835,18 @@ namespace OpenXmlPowerTools
                     return null;
                 }
 
-                /// Accept revisions in formatting on paragraphs.
-                /// Accept revisions in formatting on runs.
-                /// Accept revisions for applied styles to a table.
-                /// Accept revisions for grid revisions to a table.
-                /// Accept revisions for column properties.
-                /// Accept revisions for row properties.
-                /// Accept revisions for table level property exceptions.
-                /// Accept revisions for section properties.
-                /// Accept numbering revision in fields.
-                /// Accept deleted field code text.
-                /// Accept deleted literal text.
-                /// Accept inserted cell.
+                // Accept revisions in formatting on paragraphs.
+                // Accept revisions in formatting on runs.
+                // Accept revisions for applied styles to a table.
+                // Accept revisions for grid revisions to a table.
+                // Accept revisions for column properties.
+                // Accept revisions for row properties.
+                // Accept revisions for table level property exceptions.
+                // Accept revisions for section properties.
+                // Accept numbering revision in fields.
+                // Accept deleted field code text.
+                // Accept deleted literal text.
+                // Accept inserted cell.
 
                 if (element.Name == W.pPrChange ||
                     element.Name == W.rPrChange ||
@@ -2053,9 +2044,9 @@ namespace OpenXmlPowerTools
 
         public static class PT
         {
-            public static XNamespace pt = "http://www.codeplex.com/PowerTools/2009/RevisionAccepter";
-            public static XName UniqueId = pt + "UniqueId";
-            public static XName RunIds = pt + "RunIds";
+            public static readonly XNamespace pt = "http://www.codeplex.com/PowerTools/2009/RevisionAccepter";
+            public static readonly XName UniqueId = pt + "UniqueId";
+            public static readonly XName RunIds = pt + "RunIds";
         }
 
         private static void AnnotateRunElementsWithId(XElement element)
@@ -2075,10 +2066,6 @@ namespace OpenXmlPowerTools
             var sdtId = 0;
             foreach (var e in element.Descendants(W.sdt))
             {
-                // old version
-                //e.Add(new XAttribute(PT.RunIds,
-                //    e.Descendants(W.r).Select(r => r.Attribute(PT.UniqueId).Value).StringConcatenate(s => s + ",").Trim(',')),
-                //    new XAttribute(PT.UniqueId, sdtId++));
                 e.Add(new XAttribute(PT.RunIds,
                     e.DescendantsTrimmed(W.txbxContent)
                      .Where(d => d.Name == W.r)
@@ -2148,27 +2135,15 @@ namespace OpenXmlPowerTools
                         .Any(z => z.Name == W.r &&
                              z.Attribute(PT.UniqueId).Value == runsInNewDocument.Last().Attribute(PT.UniqueId).Value));
 
-                /// If the list of runs for the content control is exactly the list of runs for the paragraph, then
-                /// create the content control surrounding the paragraph, not surrounding the runs.
+                // If the list of runs for the content control is exactly the list of runs for the paragraph, then
+                // create the content control surrounding the paragraph, not surrounding the runs.
 
                 if (commonAncestor.Name == W.p &&
                     commonAncestor.Elements()
-                        .Where(e => e.Name != W.pPr &&
-                            e.Name != W.commentRangeStart &&
-                            e.Name != W.commentRangeEnd)
-                        .FirstOrDefault() == firstRunChild &&
+                        .FirstOrDefault(e => e.Name != W.pPr && e.Name != W.commentRangeStart && e.Name != W.commentRangeEnd) == firstRunChild &&
                     commonAncestor.Elements()
-                        .Where(e => e.Name != W.pPr &&
-                            e.Name != W.commentRangeStart &&
-                            e.Name != W.commentRangeEnd)
-                        .LastOrDefault() == lastRunChild)
+                        .LastOrDefault(e => e.Name != W.pPr && e.Name != W.commentRangeStart && e.Name != W.commentRangeEnd) == lastRunChild)
                 {
-                    // replace commonAncestor with content control containing commonAncestor
-                    var newContentControl = new XElement(contentControl.Name,
-                        contentControl.Attributes(),
-                        contentControl.Elements().Where(e => e.Name != W.sdtContent),
-                        new XElement(W.sdtContent, commonAncestor));
-
                     var newContentControlOrdered = new XElement(contentControl.Name,
                         contentControl.Attributes(),
                         contentControl.Elements().OrderBy(e =>
@@ -2291,7 +2266,7 @@ namespace OpenXmlPowerTools
 
                             if (paragraphMarkIsDeletedOrMovedFrom)
                             {
-                                if (state == 0)
+                                if (state == 0 || state == 2)
                                 {
                                     state = 1;
                                     currentKey += 1;
@@ -2305,18 +2280,6 @@ namespace OpenXmlPowerTools
                                 }
                                 else if (state == 1)
                                 {
-                                    deletedParagraphGroupingInfo.Add(
-                                        new GroupingInfo()
-                                        {
-                                            GroupingType = GroupingType.DeletedRange,
-                                            GroupingKey = currentKey,
-                                        });
-                                    continue;
-                                }
-                                else if (state == 2)
-                                {
-                                    state = 1;
-                                    currentKey += 1;
                                     deletedParagraphGroupingInfo.Add(
                                         new GroupingInfo()
                                         {
@@ -2660,8 +2623,6 @@ namespace OpenXmlPowerTools
 
         private static XElement AcceptDeletedAndMovedFromContentControls(XElement documentRootElement)
         {
-            var wordProcessingNamespacePrefix = documentRootElement.GetPrefixOfNamespace(W.w);
-
             // The following lists contain the elements that are between start/end elements.
             var startElementTagsInDeleteRange = new List<XElement>();
             var endElementTagsInDeleteRange = new List<XElement>();
@@ -2761,7 +2722,7 @@ namespace OpenXmlPowerTools
                     }
                     throw new PowerToolsInvalidDataException("Should not have reached this point.");
                 }
-                if (potentialMoveFromElements.Count() > 0 &&
+                if (potentialMoveFromElements.Any() &&
                     tag.Element.Name != W.moveFromRangeStart &&
                     tag.Element.Name != W.moveFromRangeEnd &&
                     tag.Element.Name != W.customXmlMoveFromRangeStart &&
@@ -2890,9 +2851,8 @@ namespace OpenXmlPowerTools
                                     CollectionType = DeletedCellCollectionType.DeletedCell,
                                     Disambiguator = new[] { e }
                                         .Concat(e.SiblingsBeforeSelfReverseDocumentOrder())
-                                        .Where(z => z.Name == W.tc &&
+                                        .FirstOrDefault(z => z.Name == W.tc &&
                                             !z.Descendants(W.cellDel).Any())
-                                        .FirstOrDefault()
                                 };
                                 return a;
                             }
@@ -3005,7 +2965,7 @@ namespace OpenXmlPowerTools
             return node;
         }
 
-        public static XName[] TrackedRevisionsElements = new[]
+        public static readonly XName[] TrackedRevisionsElements = new[]
         {
             W.cellDel,
             W.cellIns,
@@ -3133,8 +3093,7 @@ namespace OpenXmlPowerTools
                 // example, comment elements have no descendant elements.
                 var paragraph = content
                     .DescendantsAndSelf()
-                    .Where(e => e.Name == W.p || e.Name == W.tc || e.Name == W.txbxContent)
-                    .FirstOrDefault();
+                    .FirstOrDefault(e => e.Name == W.p || e.Name == W.tc || e.Name == W.txbxContent);
                 if (paragraph != null &&
                     (paragraph.Name == W.tc || paragraph.Name == W.txbxContent))
                 {
@@ -3181,343 +3140,343 @@ namespace OpenXmlPowerTools
     }
 }
 
-/// Markup that this code processes:
-///
-/// delText
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: MovedText.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to w:t element
-///
-/// del (deleted run content)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements and descendant elements.
-///   Reject:
-///     Transform to w:ins element
-///     Then Accept
-///
-/// ins (inserted run content)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: InsertedParagraphsAndRuns.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Collapse these elements.
-///   Reject:
-///     Transform to w:del element, and child w:t transform to w:delText element
-///     Then Accept
-///
-/// ins (inserted paragraph)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: InsertedParagraphsAndRuns.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to w:del element
-///     Then Accept
-///
-/// del (deleted paragraph mark)
-///   Method: AcceptDeletedAndMoveFromParagraphMarksTransform
-///   Sample document: VariousTableRevisions.docx (deleted paragraph mark in paragraph in
-///     content control)
-///   Reviewed: tristan and zeyad ****************************************
-///   Semantics:
-///     Find all adjacent paragraps that have this element.
-///     Group adjacent paragraphs plus the paragraph following paragraph that has this element.
-///     Replace grouped paragraphs with a new paragraph containing the content from all grouped
-///       paragraphs.  Use the paragraph properties from the first paragraph in the group.
-///   Reject:
-///     Transform to w:ins element
-///     Then Accept
-///
-/// del (deleted table row)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Match w:tr/w:trPr/w:del, remove w:tr.
-///   Reject:
-///     Transform to w:ins
-///     Then Accept
-///
-/// ins (inserted table row)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to w:del
-///     Then Accept
-///
-/// del (deleted math control character)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: DeletedMathControlCharacter.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Match m:f/m:fPr/m:ctrlPr/w:del, remove m:f.
-///   Reject:
-///     Transform to w:ins
-///     Then Accept
-///
-/// ins (inserted math control character)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: InsertedMathControlCharacter.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to w:del
-///     Then Accept
-///
-/// moveTo (move destination paragraph mark)
-///   Method: AcceptMoveFromMoveToTransform
-///   Sample document: MovedText.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to moveFrom
-///     Then Accept
-///
-/// moveTo (move destination run content)
-///   Method: AcceptMoveFromMoveToTransform
-///   Sample document: MovedText.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Collapse these elements.
-///   Reject:
-///     Transform to moveFrom
-///     Then Accept
-///
-/// moveFrom (move source paragraph mark)
-///   Methods: AcceptDeletedAndMoveFromParagraphMarksTransform, AcceptParagraphEndTagsInMoveFromTransform
-///   Sample document: MovedText.docx
-///   Reviewed: tristan and zeyad ****************************************
-///   Semantics:
-///     Find all adjacent paragraps that have this element or deleted paragraph mark.
-///     Group adjacent paragraphs plus the paragraph following paragraph that has this element.
-///     Replace grouped paragraphs with a new paragraph containing the content from all grouped
-///       paragraphs.
-///     This is handled in the same code that handles del (deleted paragraph mark).
-///   Reject:
-///     Transform to moveTo
-///     Then Accept
-///
-/// moveFrom (move source run content)
-///   Method: AcceptMoveFromMoveToTransform
-///   Sample document: MovedText.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to moveTo
-///     Then Accept
-///
-/// moveFromRangeStart
-/// moveFromRangeEnd
-///   Method: AcceptMoveFromRanges
-///   Sample document: MovedText.docx
-///   Semantics:
-///     Find pairs of elements.  Remove all elements that have both start and end tags in a
-///       range.
-///   Reject:
-///     Transform to moveToRangeStart, moveToRangeEnd
-///     Then Accept
-///
-/// moveToRangeStart
-/// moveToRangeEnd
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: MovedText.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to moveFromRangeStart, moveFromRangeEnd
-///     Then Accept
-///
-/// customXmlDelRangeStart
-/// customXmlDelRangeEnd
-/// customXmlMoveFromRangeStart
-/// customXmlMoveFromRangeEnd
-///   Method: AcceptDeletedAndMovedFromContentControls
-///   Reviewed: tristan and zeyad ****************************************
-///   Semantics:
-///     Find pairs of start/end elements, matching id attributes.  Collapse sdt
-///       elements that have both start and end tags in a range.
-///   Reject:
-///     Transform to customXmlInsRangeStart, customXmlInsRangeEnd, customXmlMoveToRangeStart, customXmlMoveToRangeEnd
-///     Then Accept
-///
-/// customXmlInsRangeStart
-/// customXmlInsRangeEnd
-/// customXmlMoveToRangeStart
-/// customXmlMoveToRangeEnd
-///   Method: AcceptAllOtherRevisionsTransform
-///   Reviewed: tristan and zeyad ****************************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to customXmlDelRangeStart, customXmlDelRangeEnd, customXmlMoveFromRangeStart, customXmlMoveFromRangeEnd
-///     Then Accept
-///
-/// delInstrText (deleted field code)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: NumberingParagraphPropertiesChange.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Transform to instrText
-///     Then Accept
-///     Note that instrText must be transformed to delInstrText when in a w:ins, in the same fashion that w:t must be transformed to w:delText when in w:ins
-///
-/// ins (inserted numbering properties)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: InsertedNumberingProperties.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject
-///     Remove the containing w:numPr
-///
-/// pPrChange (revision information for paragraph properties)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: ParagraphAndRunPropertyRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace pPr with the pPr in pPrChange
-///
-/// rPrChange (revision information for run properties)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: ParagraphAndRunPropertyRevisions.docx
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace rPr with the rPr in rPrChange
-///
-/// rPrChange (revision information for run properties on the paragraph mark)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: ParagraphAndRunPropertyRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace rPr with the rPr in rPrChange.
-///
-/// numberingChange (previous numbering field properties)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: NumberingFieldPropertiesChange.docx
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Remove these elements.
-///     These are there for numbering created via fields, and are not important.
-///
-/// numberingChange (previous paragraph numbering properties)
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: NumberingFieldPropertiesChange.docx
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Remove these elements.
-///
-/// sectPrChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: SectionPropertiesChange.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace sectPr with the sectPr in sectPrChange
-///
-/// tblGridChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: TableGridChange.docx
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace tblGrid with the tblGrid in tblGridChange
-///
-/// tblPrChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: TableGridChange.docx
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace tblPr with the tblPr in tblPrChange
-///
-/// tblPrExChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace tblPrEx with the tblPrEx in tblPrExChange
-///
-/// tcPrChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: TableGridChange.docx
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace tcPr with the tcPr in tcPrChange
-///
-/// trPrChange
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: VariousTableRevisions.docx
-///   Reviewed: zeyad ***************************
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     Replace trPr with the trPr in trPrChange
-///
-/// celDel
-///   Method: AcceptDeletedCellsTransform
-///   Sample document: HorizontallyMergedCells.docx
-///   Semantics:
-///     Group consecutive deleted cells, and remove them.
-///     Adjust the cell before deleted cells:
-///       Increase gridSpan by the number of deleted cells that are removed.
-///   Reject:
-///     Remove this element
-///
-/// celIns
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: HorizontallyMergedCells11.docx
-///   Semantics:
-///     Remove these elements.
-///   Reject:
-///     If a w:tc contains w:tcPr/w:cellIns, then remove the cell
-///
-/// cellMerge
-///   Method: AcceptAllOtherRevisionsTransform
-///   Sample document: MergedCell.docx
-///   Semantics:
-///     Transform cellMerge with a parent of tcPr, with attribute w:vMerge="rest"
-///       to <w:vMerge w:val="restart"/>.
-///     Transform cellMerge with a parent of tcPr, with attribute w:vMerge="cont"
-///       to <w:vMerge w:val="continue"/>
-///
-/// The following items need to be addressed in a future release:
-/// - inserted run inside deleted paragraph - moveTo is same as insert
-/// - must increase w:val attribute of the w:gridSpan element of the
-///   cell immediately preceding the group of deleted cells by the
-///   ***sum*** of the values of the w:val attributes of w:gridSpan
-///   elements of each of the deleted cells.
+// Markup that this code processes:
+//
+// delText
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: MovedText.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to w:t element
+//
+// del (deleted run content)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements and descendant elements.
+//   Reject:
+//     Transform to w:ins element
+//     Then Accept
+//
+// ins (inserted run content)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: InsertedParagraphsAndRuns.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Collapse these elements.
+//   Reject:
+//     Transform to w:del element, and child w:t transform to w:delText element
+//     Then Accept
+//
+// ins (inserted paragraph)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: InsertedParagraphsAndRuns.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to w:del element
+//     Then Accept
+//
+// del (deleted paragraph mark)
+//   Method: AcceptDeletedAndMoveFromParagraphMarksTransform
+//   Sample document: VariousTableRevisions.docx (deleted paragraph mark in paragraph in
+//     content control)
+//   Reviewed: tristan and zeyad ****************************************
+//   Semantics:
+//     Find all adjacent paragraps that have this element.
+//     Group adjacent paragraphs plus the paragraph following paragraph that has this element.
+//     Replace grouped paragraphs with a new paragraph containing the content from all grouped
+//       paragraphs.  Use the paragraph properties from the first paragraph in the group.
+//   Reject:
+//     Transform to w:ins element
+//     Then Accept
+//
+// del (deleted table row)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Match w:tr/w:trPr/w:del, remove w:tr.
+//   Reject:
+//     Transform to w:ins
+//     Then Accept
+//
+// ins (inserted table row)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to w:del
+//     Then Accept
+//
+// del (deleted math control character)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: DeletedMathControlCharacter.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Match m:f/m:fPr/m:ctrlPr/w:del, remove m:f.
+//   Reject:
+//     Transform to w:ins
+//     Then Accept
+//
+// ins (inserted math control character)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: InsertedMathControlCharacter.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to w:del
+//     Then Accept
+//
+// moveTo (move destination paragraph mark)
+//   Method: AcceptMoveFromMoveToTransform
+//   Sample document: MovedText.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to moveFrom
+//     Then Accept
+//
+// moveTo (move destination run content)
+//   Method: AcceptMoveFromMoveToTransform
+//   Sample document: MovedText.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Collapse these elements.
+//   Reject:
+//     Transform to moveFrom
+//     Then Accept
+//
+// moveFrom (move source paragraph mark)
+//   Methods: AcceptDeletedAndMoveFromParagraphMarksTransform, AcceptParagraphEndTagsInMoveFromTransform
+//   Sample document: MovedText.docx
+//   Reviewed: tristan and zeyad ****************************************
+//   Semantics:
+//     Find all adjacent paragraps that have this element or deleted paragraph mark.
+//     Group adjacent paragraphs plus the paragraph following paragraph that has this element.
+//     Replace grouped paragraphs with a new paragraph containing the content from all grouped
+//       paragraphs.
+//     This is handled in the same code that handles del (deleted paragraph mark).
+//   Reject:
+//     Transform to moveTo
+//     Then Accept
+//
+// moveFrom (move source run content)
+//   Method: AcceptMoveFromMoveToTransform
+//   Sample document: MovedText.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to moveTo
+//     Then Accept
+//
+// moveFromRangeStart
+// moveFromRangeEnd
+//   Method: AcceptMoveFromRanges
+//   Sample document: MovedText.docx
+//   Semantics:
+//     Find pairs of elements.  Remove all elements that have both start and end tags in a
+//       range.
+//   Reject:
+//     Transform to moveToRangeStart, moveToRangeEnd
+//     Then Accept
+//
+// moveToRangeStart
+// moveToRangeEnd
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: MovedText.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to moveFromRangeStart, moveFromRangeEnd
+//     Then Accept
+//
+// customXmlDelRangeStart
+// customXmlDelRangeEnd
+// customXmlMoveFromRangeStart
+// customXmlMoveFromRangeEnd
+//   Method: AcceptDeletedAndMovedFromContentControls
+//   Reviewed: tristan and zeyad ****************************************
+//   Semantics:
+//     Find pairs of start/end elements, matching id attributes.  Collapse sdt
+//       elements that have both start and end tags in a range.
+//   Reject:
+//     Transform to customXmlInsRangeStart, customXmlInsRangeEnd, customXmlMoveToRangeStart, customXmlMoveToRangeEnd
+//     Then Accept
+//
+// customXmlInsRangeStart
+// customXmlInsRangeEnd
+// customXmlMoveToRangeStart
+// customXmlMoveToRangeEnd
+//   Method: AcceptAllOtherRevisionsTransform
+//   Reviewed: tristan and zeyad ****************************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to customXmlDelRangeStart, customXmlDelRangeEnd, customXmlMoveFromRangeStart, customXmlMoveFromRangeEnd
+//     Then Accept
+//
+// delInstrText (deleted field code)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: NumberingParagraphPropertiesChange.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Transform to instrText
+//     Then Accept
+//     Note that instrText must be transformed to delInstrText when in a w:ins, in the same fashion that w:t must be transformed to w:delText when in w:ins
+//
+// ins (inserted numbering properties)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: InsertedNumberingProperties.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject
+//     Remove the containing w:numPr
+//
+// pPrChange (revision information for paragraph properties)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: ParagraphAndRunPropertyRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace pPr with the pPr in pPrChange
+//
+// rPrChange (revision information for run properties)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: ParagraphAndRunPropertyRevisions.docx
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace rPr with the rPr in rPrChange
+//
+// rPrChange (revision information for run properties on the paragraph mark)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: ParagraphAndRunPropertyRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace rPr with the rPr in rPrChange.
+//
+// numberingChange (previous numbering field properties)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: NumberingFieldPropertiesChange.docx
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Remove these elements.
+//     These are there for numbering created via fields, and are not important.
+//
+// numberingChange (previous paragraph numbering properties)
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: NumberingFieldPropertiesChange.docx
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Remove these elements.
+//
+// sectPrChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: SectionPropertiesChange.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace sectPr with the sectPr in sectPrChange
+//
+// tblGridChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: TableGridChange.docx
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace tblGrid with the tblGrid in tblGridChange
+//
+// tblPrChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: TableGridChange.docx
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace tblPr with the tblPr in tblPrChange
+//
+// tblPrExChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace tblPrEx with the tblPrEx in tblPrExChange
+//
+// tcPrChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: TableGridChange.docx
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace tcPr with the tcPr in tcPrChange
+//
+// trPrChange
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: VariousTableRevisions.docx
+//   Reviewed: zeyad ***************************
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     Replace trPr with the trPr in trPrChange
+//
+// celDel
+//   Method: AcceptDeletedCellsTransform
+//   Sample document: HorizontallyMergedCells.docx
+//   Semantics:
+//     Group consecutive deleted cells, and remove them.
+//     Adjust the cell before deleted cells:
+//       Increase gridSpan by the number of deleted cells that are removed.
+//   Reject:
+//     Remove this element
+//
+// celIns
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: HorizontallyMergedCells11.docx
+//   Semantics:
+//     Remove these elements.
+//   Reject:
+//     If a w:tc contains w:tcPr/w:cellIns, then remove the cell
+//
+// cellMerge
+//   Method: AcceptAllOtherRevisionsTransform
+//   Sample document: MergedCell.docx
+//   Semantics:
+//     Transform cellMerge with a parent of tcPr, with attribute w:vMerge="rest"
+//       to <w:vMerge w:val="restart"/>.
+//     Transform cellMerge with a parent of tcPr, with attribute w:vMerge="cont"
+//       to <w:vMerge w:val="continue"/>
+//
+// The following items need to be addressed in a future release:
+// - inserted run inside deleted paragraph - moveTo is same as insert
+// - must increase w:val attribute of the w:gridSpan element of the
+//   cell immediately preceding the group of deleted cells by the
+//   ***sum*** of the values of the w:val attributes of w:gridSpan
+//   elements of each of the deleted cells.

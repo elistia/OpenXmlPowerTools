@@ -13,20 +13,14 @@ namespace OpenXmlPowerTools
     /// </summary>
     public class SpreadsheetDocumentManager
     {
-        private static readonly XNamespace ns;
-        private static readonly XNamespace relationshipsns;
+        private static readonly XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        private static readonly XNamespace relationshipsns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
         private static int headerRow = 1;
-
-        static SpreadsheetDocumentManager()
-        {
-            ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-            relationshipsns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-        }
 
         /// <summary>
         /// Creates a spreadsheet document from a value table
         /// </summary>
-        /// <param name="filePath">Path to store the document</param>
+        /// <param name="document">The document</param>
         /// <param name="headerList">Contents of first row (header)</param>
         /// <param name="valueTable">Contents of data</param>
         /// <param name="initialRow">Row to start copying data from</param>
@@ -87,6 +81,7 @@ namespace OpenXmlPowerTools
                 .Attribute("name").Value;
             return sheetName;
         }
+
         /// <summary>
         /// Gets the range reference for category
         /// </summary>

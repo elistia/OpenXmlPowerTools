@@ -1128,7 +1128,7 @@ namespace OxPt
         };
     }
 
-    public class WordRunner
+    public static class WordRunner
     {
         public static void RunWord(FileInfo executablePath, FileInfo docxPath)
         {
