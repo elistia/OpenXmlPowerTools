@@ -68,14 +68,14 @@ namespace OpenXmlPowerTools
         }
 
         /// <summary>
-        /// If replacement == "new content" && callback == null
+        /// If replacement == "new content" and callback == null
         ///     Then replaces all matches
-        /// If replacement == "" && callback == null)
+        /// If replacement == "" and callback == null)
         ///     Then deletes all matches
-        /// If replacement == "new content" && callback != null)
+        /// If replacement == "new content" and callback != null)
         ///     Then the callback can return true / false to indicate whether to replace or not
         /// If the callback returns true once, and false on all subsequent calls, then this method replaces only the first found.
-        /// If replacement == "" && callback != null)
+        /// If replacement == "" and callback != null)
         ///     Then the callback can return true / false to indicate whether to delete or not
         /// </summary>
         public static int Replace(IEnumerable<XElement> content, Regex regex, string replacement,
@@ -94,14 +94,14 @@ namespace OpenXmlPowerTools
         }
 
         /// <summary>
-        /// If replacement == "new content" && callback == null
+        /// If replacement == "new content" and callback == null
         ///     Then replaces all matches
-        /// If replacement == "" && callback == null)
+        /// If replacement == "" and callback == null)
         ///     Then deletes all matches
-        /// If replacement == "new content" && callback != null)
+        /// If replacement == "new content" and callback != null)
         ///     Then the callback can return true / false to indicate whether to replace or not
         /// If the callback returns true once, and false on all subsequent calls, then this method replaces only the first found.
-        /// If replacement == "" && callback != null)
+        /// If replacement == "" and callback != null)
         ///     Then the callback can return true / false to indicate whether to delete or not
         /// If trackRevisions == true
         ///     Then replacement is done using revision tracking markup, with author as the revision tracking author

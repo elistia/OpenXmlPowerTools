@@ -4,7 +4,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RepositoryUrl>https://github.com/Codeuctivity/Open-Xml-PowerTools</RepositoryUrl>
-    <PackageTags>openxml office</PackageTags>
+    <PackageTags>openxml office docx</PackageTags>
     <Authors>Contributors</Authors>
     <Company>Codeuctivity</Company>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
@@ -30,6 +30,7 @@ It supports scenarios such as:
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!--Causes a hanging build -->
     <!--<Nullable>enable</Nullable>-->
     <LangVersion>8.0</LangVersion>
     <SignAssembly>true</SignAssembly>
