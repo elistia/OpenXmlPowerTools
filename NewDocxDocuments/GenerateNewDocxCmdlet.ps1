@@ -1,11 +1,10 @@
 ﻿[environment]::CurrentDirectory = $(Get-Location)
-if (-not $(Test-Path .\GenerateNewDocxCmdlet.ps1))
-{
+if (-not $(Test-Path .\GenerateNewDocxCmdlet.ps1)) {
     Throw "You must run this script from within the NewDocxDocuments directory"
 }
 
 $dx = "..\Cmdlets\DocxLib.ps1"
-if (Test-Path $dx) { del $dx }
+if (Test-Path $dx) { Remove-Item $dx }
 
 $lineBreak = [System.Environment]::NewLine
 
@@ -29,7 +28,7 @@ Resource Center and Documentation: http://openxmldeveloper.org/wiki/w/wiki/power
 
 [void]$sbDxl.Append($copyrightString + $lineBreak)
 
-dir *.docx | % {
+Get-ChildItem *.docx | ForEach-Object {
     $fi = New-Object System.IO.FileInfo $_
     [void]$sbDxl.Append("`$SampleDocx$($_.BaseName) =" + $lineBreak)
     $b64 = $(ConvertTo-Base64 $_ -PowerShellLiteral)
@@ -42,8 +41,7 @@ $template = [System.IO.File]::ReadAllLines("..\Cmdlets\New-Docx-Template.ps1")
 $paramDocs = -1;
 $paramDecl = -1;
 $paramUse = -1;
-for ($i = 0; $i -lt $template.Length; $i++)
-{
+for ($i = 0; $i -lt $template.Length; $i++) {
     $t = $template[$i]
     if ($t.Contains("ParameterDocumentation")) { $paramDocs = $i }
     if ($t.Contains("ParameterDeclaration")) { $paramDecl = $i }
@@ -51,44 +49,39 @@ for ($i = 0; $i -lt $template.Length; $i++)
 }
 
 $ndx = "..\Cmdlets\New-Docx.ps1"
-if (Test-Path $ndx)
-{
+if (Test-Path $ndx) {
     Remove-Item $ndx
 }
 
 $sbGenNewDocx = New-Object System.Text.StringBuilder;
 
 $template[0..($paramDocs - 1)] | % { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
-dir *.docx | % {
+Get-ChildItem *.docx | ForEach-Object {
     $fi = New-Object System.IO.FileInfo $_
     [void]$sbGenNewDocx.Append("    .PARAMETER $($fi.BaseName)" + $lineBreak)
     $fiDesc = New-Object System.IO.FileInfo $($_.BaseName + ".txt")
-    if ($fiDesc.Exists)
-    {
-        Get-Content $($fiDesc.FullName) | % { [void]$sbGenNewDocx.Append('    ' + $_ + $lineBreak) }
+    if ($fiDesc.Exists) {
+        Get-Content $($fiDesc.FullName) | ForEach-Object { [void]$sbGenNewDocx.Append('    ' + $_ + $lineBreak) }
     }
-    else
-    {
+    else {
         $errMessage = "Error: $($fi.BaseName).docx does not have a corresponding $($fi.BaseName).txt"
-        Write-Host -ForegroundColor Red $errMessage
+        Write-Error $errMessage
         [void]$sbGenNewDocx.Append('    ' + $errMessage + $lineBreak)
     }
 }
 $start = $paramDocs + 1
 $end = $paramDecl - 1
-$template[$start..$end] | % { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
-$last = (($(dir *.docx) | measure).Count) - 1
+$template[$start..$end] | ForEach-Object { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
+$last = (($(Get-ChildItem *.docx) | Measure-Object).Count) - 1
 $count = 0
-dir *.docx | % {
+Get-ChildItem *.docx | ForEach-Object {
     $fi = New-Object System.IO.FileInfo $_
     [void]$sbGenNewDocx.Append('        [Parameter(Mandatory=$False)]' + $lineBreak)
     [void]$sbGenNewDocx.Append('        [Switch]' + $lineBreak)
-    if ($count -ne $last)
-    {
+    if ($count -ne $last) {
         [void]$sbGenNewDocx.Append("        [bool]`$$($_.BaseName)," + $lineBreak)
     }
-    else
-    {
+    else {
         [void]$sbGenNewDocx.Append("        [bool]`$$($_.BaseName)" + $lineBreak)
     }
     [void]$sbGenNewDocx.Append($lineBreak)
@@ -96,12 +89,12 @@ dir *.docx | % {
 }
 $start = $paramDecl + 1
 $end = $paramUse - 1
-$template[$start..$end] | % { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
-dir *.docx | % {
+$template[$start..$end] | ForEach-Object { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
+Get-ChildItem *.docx | ForEach-Object {
     $fi = New-Object System.IO.FileInfo $_
     [void]$sbGenNewDocx.Append("    if (`$All -or `$$($fi.BaseName)) { AppendDoc `$srcList `$SampleDocx$($fi.BaseName) `"$($fi.BaseName)`" }" + $lineBreak)
 }
 $start = $paramUse + 1
-$template[$start..99999] | % { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
+$template[$start..99999] | ForEach-Object { [void]$sbGenNewDocx.Append($_ + $lineBreak) }
 
 Set-Content -Value $sbGenNewDocx.ToString() -Path $ndx -Encoding UTF8
