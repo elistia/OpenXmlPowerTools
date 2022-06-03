@@ -148,22 +148,32 @@ namespace Codeuctivity.OpenXmlPowerTools
             var cellReference = WorksheetAccessor.GetColumnId(column) + row.ToString();
             XElement? newCell = null;
 
-            if (cellValue is int || cellValue is double)
+            if (cellValue is sbyte
+                || cellValue is byte
+                || cellValue is short
+                || cellValue is ushort
+                || cellValue is int
+                || cellValue is uint
+                || cellValue is long
+                || cellValue is ulong
+                || cellValue is float
+                || cellValue is double
+                || cellValue is decimal)
             {
-                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XElement(S.v, cellValue.ToString()));
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "n"), new XElement(S.v, cellValue.ToString()));
             }
             else if (cellValue is bool)
             {
                 newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "b"), new XElement(S.v, (bool)cellValue ? "1" : "0"));
             }
-            else if (cellValue is string)
+            else if (cellValue is DateTime)
             {
-                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "inlineStr"),
-                    new XElement(S._is, new XElement(S.t, cellValue.ToString())));
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XElement(S.v, ((DateTime)cellValue).ToOADate().ToString()));
+                if (styleIndex == 0) newCell.Add(new XAttribute(NoNamespace.s, "1")); // add default datetime style (as defined in defaultStyle)
             }
-            if (newCell == null)
+            else // everything else is treated as string
             {
-                throw new ArgumentException("Invalid cell type.");
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "inlineStr"), new XElement(S._is, new XElement(S.t, cellValue.ToString())));
             }
 
             if (styleIndex != 0)
@@ -298,30 +308,43 @@ namespace Codeuctivity.OpenXmlPowerTools
             return rowElement.Elements(S.c).FirstOrDefault(c => c.Attribute(NoNamespace.r).Value.Equals(cellReference));
         }
 
-        // Sets the value for the specified cell
-        // The "value" must be double/Double, int/Int32, bool/Boolean or string/String type
-        public static void SetCellValue(WorksheetPart worksheet, int row, int column, object value)
+        // Sets the value for the specified cell (with option to select style)
+        public static void SetCellValue(WorksheetPart worksheet, int row, int column, object value, int styleIndex = 0)
         {
             var worksheetXDocument = worksheet.GetXDocument();
             var cellReference = GetColumnId(column) + row.ToString();
             XElement? newCell = null;
 
-            if (value is int || value is double)
+            if (value is sbyte
+                || value is byte
+                || value is short
+                || value is ushort
+                || value is int
+                || value is uint
+                || value is long
+                || value is ulong
+                || value is float
+                || value is double
+                || value is decimal)
             {
-                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XElement(S.v, value.ToString()));
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "n"), new XElement(S.v, value.ToString()));
             }
             else if (value is bool)
             {
                 newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "b"), new XElement(S.v, (bool)value ? "1" : "0"));
             }
-            else if (value is string)
+            else if (value is DateTime)
             {
-                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "inlineStr"),
-                    new XElement(S._is, new XElement(S.t, value.ToString())));
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XElement(S.v, ((DateTime)value).ToOADate().ToString()));
             }
-            if (newCell == null)
+            else // everything else is treated as string
             {
-                throw new ArgumentException("Invalid cell type.");
+                newCell = new XElement(S.c, new XAttribute(NoNamespace.r, cellReference), new XAttribute(NoNamespace.t, "inlineStr"), new XElement(S._is, new XElement(S.t, value.ToString())));
+            }
+
+            if (styleIndex != 0)
+            {
+                newCell.Add(new XAttribute(NoNamespace.s, styleIndex));
             }
 
             SetCell(worksheetXDocument, newCell);
@@ -2243,8 +2266,9 @@ namespace Codeuctivity.OpenXmlPowerTools
     <xf numFmtId='0' fontId='1' fillId='31' borderId='0' applyNumberFormat='0' applyBorder='0' applyAlignment='0' applyProtection='0'/>
     <xf numFmtId='0' fontId='17' fillId='32' borderId='0' applyNumberFormat='0' applyBorder='0' applyAlignment='0' applyProtection='0'/>
   </cellStyleXfs>
-  <cellXfs count='1'>
+  <cellXfs count='2'>
     <xf numFmtId='0' fontId='0' fillId='0' borderId='0' xfId='0'/>
+    <xf numFmtId='22' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/>
   </cellXfs>
   <cellStyles count='42'>
     <cellStyle name='20% - Accent1' xfId='19' builtinId='30' customBuiltin='1'/>

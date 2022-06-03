@@ -84,6 +84,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarkupSimplifierApp", "OpenXmlPowerToolsExamples\MarkupSimplifierApp\MarkupSimplifierApp.csproj", "{6731E031-9C81-48FB-97A7-0E945993BCE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemorySpreadsheet01", "OpenXmlPowerToolsExamples\MemorySpreadsheet01\MemorySpreadsheet01.csproj", "{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -230,6 +232,10 @@ Global
 		{6731E031-9C81-48FB-97A7-0E945993BCE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6731E031-9C81-48FB-97A7-0E945993BCE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6731E031-9C81-48FB-97A7-0E945993BCE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -268,6 +274,7 @@ Global
 		{C9CAA69C-575A-442E-9D8A-69C53B39D72C} = {A83D6B58-6D38-46AF-8C20-5CFC170A1063}
 		{3D1C46E1-7A9E-4A4B-8D95-68613603DEDF} = {A83D6B58-6D38-46AF-8C20-5CFC170A1063}
 		{6731E031-9C81-48FB-97A7-0E945993BCE2} = {A83D6B58-6D38-46AF-8C20-5CFC170A1063}
+		{E4F1BE6C-2366-469A-8ADE-8DA2CDC012FE} = {A83D6B58-6D38-46AF-8C20-5CFC170A1063}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E623EFF5-2CA4-4FA0-B3AB-53F921DA212E}
