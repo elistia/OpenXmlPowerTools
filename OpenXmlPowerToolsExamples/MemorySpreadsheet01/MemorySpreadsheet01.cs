@@ -51,6 +51,41 @@ namespace MemorySpreadsheet01
                         rowIndex++;
                     }
 
+                    rowIndex++;
+
+                    int dateStyle = WorksheetAccessor.GetStyleIndex(doc, "Normal", (int)WorksheetAccessor.NumberFormats.Date);
+
+                    ms.SetCellValue(rowIndex, 1, "Date Only");
+                    ms.SetCellValue(rowIndex, 2, new DateTime(2022, 06, 11, 19, 42, 42), dateStyle);
+
+                    rowIndex++;
+
+                    int dateTimeStyle = WorksheetAccessor.GetStyleIndex(doc, "Normal", (int)WorksheetAccessor.NumberFormats.DateTime);
+
+                    ms.SetCellValue(rowIndex, 1, "Datetime");
+                    ms.SetCellValue(rowIndex, 2, new DateTime(2022, 06, 11, 19, 42, 42), dateTimeStyle);
+
+                    rowIndex++;
+
+                    int currencyStyle = WorksheetAccessor.GetStyleIndex(doc, "Normal", (int)WorksheetAccessor.NumberFormats.CurrencyDecimal);
+
+                    ms.SetCellValue(rowIndex, 1, "Currency");
+                    ms.SetCellValue(rowIndex, 2, 102.66666F, currencyStyle);
+
+                    rowIndex++;
+
+                    WorksheetAccessor.CellAlignment centreAlignment = new WorksheetAccessor.CellAlignment();
+                    centreAlignment.HorizontalAlignment = WorksheetAccessor.CellAlignment.Horizontal.Center;
+
+                    WorksheetAccessor.PatternFill fillYellow = new WorksheetAccessor.PatternFill(WorksheetAccessor.PatternFill.PatternType.Solid, new WorksheetAccessor.ColorInfo("FFFF00"), new WorksheetAccessor.ColorInfo("FFFF00"));
+                    int yellowFillIndex = WorksheetAccessor.GetFillIndex(doc, fillYellow);
+
+                    int percentStyle = WorksheetAccessor.GetStyleIndex(doc, (int)WorksheetAccessor.NumberFormats.PercentDecimal, 0, yellowFillIndex, 0, centreAlignment, false, false);
+
+                    ms.SetCellValue(rowIndex, 1, "Percent");
+                    ms.SetCellValue(rowIndex, 2, 0.66666F, percentStyle);
+
+
                     WorksheetAccessor.SetSheetContents(sheet, ms);
                 }
 

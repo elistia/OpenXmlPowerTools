@@ -1582,15 +1582,68 @@ namespace Codeuctivity.OpenXmlPowerTools
             return borders.Elements(S.border).Count() - 1;
         }
 
-        public static int GetStyleIndex(SpreadsheetDocument document, string styleName)
+        /// <summary>
+        /// Predefined number format codes - actual output may depend on locale
+        /// </summary>
+        public enum NumberFormats
+        {
+            /// <summary>
+            /// 0
+            /// </summary>
+            Integer = 1,
+            /// <summary>
+            /// 0.00
+            /// </summary>
+            Decimal = 2,
+            /// <summary>
+            /// $#,##0_);($#,##0)
+            /// </summary>
+            CurrencyInt = 5,
+            /// <summary>
+            /// $#,##0.00_);($#,##0.00)
+            /// </summary>
+            CurrencyDecimal = 7,
+            /// <summary>
+            /// 0%
+            /// </summary>
+            PercentInt = 9,
+            /// <summary>
+            /// 0.00%
+            /// </summary>
+            PercentDecimal = 10,
+            /// <summary>
+            /// m/d/yyyy (or d/m/yyyy depending on locale)
+            /// </summary>
+            Date = 14,
+            /// <summary>
+            /// m/d/yyyy h:mm (or d/m/yyyy depending on locale)
+            /// </summary>
+            DateTime = 22
+        }
+
+        public static int GetStyleIndex(SpreadsheetDocument document, string styleName, int numFmt = 0)
         {
             var styles = document.WorkbookPart.WorkbookStylesPart.GetXDocument();
             var xfId = styles.Root.Element(S.cellStyles).Elements(S.cellStyle)
                 .FirstOrDefault(t => t.Attribute(NoNamespace.name).Value == styleName)
                 .Attribute(NoNamespace.xfId).Value;
             var cellXfs = styles.Root.Element(S.cellXfs);
-            var index = Array.FindIndex(cellXfs.Elements(S.xf).ToArray(),
-                z => z.Attribute(NoNamespace.xfId).Value == xfId);
+
+            int index;
+
+            if (numFmt > 0)
+            {
+                index = Array.FindIndex(cellXfs.Elements(S.xf).ToArray(),
+                    z => (z.Attribute(NoNamespace.xfId).Value == xfId
+                    && z.Attribute(NoNamespace.numFmtId).Value == numFmt.ToString()
+                    && z.Attribute(NoNamespace.applyNumberFormat)?.Value == "1"));
+            }
+            else
+            {
+                index = Array.FindIndex(cellXfs.Elements(S.xf).ToArray(),
+                    z => z.Attribute(NoNamespace.xfId).Value == xfId);
+            }
+
             if (index != -1)
             {
                 return index;
@@ -1599,11 +1652,13 @@ namespace Codeuctivity.OpenXmlPowerTools
             var cellStyleXf = styles.Root.Element(S.cellStyleXfs).Elements(S.xf).ToArray()[Convert.ToInt32(xfId)];
             if (cellStyleXf != null)
             {   // Create new xf element under cellXfs
-                cellXfs.Add(new XElement(S.xf, new XAttribute(NoNamespace.numFmtId, cellStyleXf.Attribute(NoNamespace.numFmtId).Value),
+                var newCellXfs = new XElement(S.xf, new XAttribute(NoNamespace.numFmtId, (numFmt == 0) ? cellStyleXf.Attribute(NoNamespace.numFmtId).Value : numFmt.ToString()),
                     new XAttribute(NoNamespace.fontId, cellStyleXf.Attribute(NoNamespace.fontId).Value),
                     new XAttribute(NoNamespace.fillId, cellStyleXf.Attribute(NoNamespace.fillId).Value),
                     new XAttribute(NoNamespace.borderId, cellStyleXf.Attribute(NoNamespace.borderId).Value),
-                    new XAttribute(NoNamespace.xfId, xfId)));
+                    new XAttribute(NoNamespace.xfId, xfId));
+                if (numFmt > 0) newCellXfs.Add(new XAttribute(NoNamespace.applyNumberFormat, "1"));
+                cellXfs.Add(newCellXfs);
                 cellXfs.Attribute(NoNamespace.count).Value = cellXfs.Elements(S.xf).Count().ToString();
                 document.WorkbookPart.WorkbookStylesPart.PutXDocument();
                 return cellXfs.Elements(S.xf).Count() - 1;
